@@ -8,7 +8,7 @@
 // ========================================
 
 const SIGNALING_SERVER =
-    "ws://172.27.66.81:8080";
+    "wss://approach-power-expensive-comprehensive.trycloudflare.com";
 
 
 // ========================================
@@ -55,15 +55,24 @@ let isCaller = false;
 
 
 // ========================================
+// ICE QUEUE
+// ========================================
+
+let pendingIceCandidates = [];
+
+
+// ========================================
 // WEBRTC CONFIG
 // ========================================
 
 const rtcConfig = {
 
     iceServers: [
+
         {
             urls: "stun:stun.l.google.com:19302"
         }
+
     ]
 
 };
@@ -92,14 +101,15 @@ try {
 
         if (Array.isArray(parsed)) {
 
-            recentUsers = parsed
-                .filter(
-                    uid =>
-                        typeof uid === "string" &&
-                        uid &&
-                        uid !== myUID
-                )
-                .slice(0, 20);
+            recentUsers =
+                parsed
+                    .filter(
+                        uid =>
+                            typeof uid === "string" &&
+                            uid &&
+                            uid !== myUID
+                    )
+                    .slice(0, 20);
 
         }
 
@@ -206,22 +216,15 @@ function addRecentUser(uid) {
         return;
     }
 
-
-    // Remove duplicate
     recentUsers =
         recentUsers.filter(
             user => user !== uid
         );
 
-
-    // Put latest chat at top
     recentUsers.unshift(uid);
 
-
-    // Keep maximum 20
     recentUsers =
         recentUsers.slice(0, 20);
-
 
     saveRecentUsers();
 
@@ -262,7 +265,6 @@ function renderRecents() {
         return;
     }
 
-
     if (recentCount) {
 
         recentCount.textContent =
@@ -270,9 +272,7 @@ function renderRecents() {
 
     }
 
-
     recentUsersElement.innerHTML = "";
-
 
     if (recentUsers.length === 0) {
 
@@ -285,7 +285,6 @@ function renderRecents() {
 
     }
 
-
     recentUsers.forEach(uid => {
 
         const item =
@@ -296,10 +295,8 @@ function renderRecents() {
         item.className =
             "recent-item";
 
-
         const online =
             presenceStatus.get(uid) === true;
-
 
         item.innerHTML = `
 
@@ -321,7 +318,6 @@ function renderRecents() {
 
         `;
 
-
         item.addEventListener(
             "click",
             () => {
@@ -330,7 +326,6 @@ function renderRecents() {
 
             }
         );
-
 
         recentUsersElement.appendChild(
             item
@@ -356,12 +351,10 @@ function watchRecentPresence() {
 
     }
 
-
     const uids =
         recentUsers.filter(
             uid => uid !== myUID
         );
-
 
     socket.send(
         JSON.stringify({
@@ -391,12 +384,10 @@ function updatePresence(
         return;
     }
 
-
     presenceStatus.set(
         uid,
         online
     );
-
 
     renderRecents();
 
@@ -412,7 +403,6 @@ function updatePendingCount() {
     if (!pendingCount) {
         return;
     }
-
 
     pendingCount.textContent =
         pendingRequests.length;
@@ -430,9 +420,7 @@ function renderPendingRequests() {
         return;
     }
 
-
     pendingList.innerHTML = "";
-
 
     if (
         pendingRequests.length === 0
@@ -449,7 +437,6 @@ function renderPendingRequests() {
 
     }
 
-
     pendingRequests.forEach(request => {
 
         const card =
@@ -457,7 +444,6 @@ function renderPendingRequests() {
 
         card.className =
             "pending-request-card";
-
 
         const user =
             document.createElement("div");
@@ -468,13 +454,11 @@ function renderPendingRequests() {
         user.textContent =
             request.from;
 
-
         const buttons =
             document.createElement("div");
 
         buttons.className =
             "pending-request-buttons";
-
 
         const acceptButton =
             document.createElement("button");
@@ -488,7 +472,6 @@ function renderPendingRequests() {
         acceptButton.className =
             "pending-accept";
 
-
         const rejectButton =
             document.createElement("button");
 
@@ -501,7 +484,6 @@ function renderPendingRequests() {
         rejectButton.className =
             "pending-reject";
 
-
         acceptButton.addEventListener(
             "click",
             () => {
@@ -512,7 +494,6 @@ function renderPendingRequests() {
 
             }
         );
-
 
         rejectButton.addEventListener(
             "click",
@@ -525,7 +506,6 @@ function renderPendingRequests() {
             }
         );
 
-
         buttons.appendChild(
             acceptButton
         );
@@ -533,7 +513,6 @@ function renderPendingRequests() {
         buttons.appendChild(
             rejectButton
         );
-
 
         card.appendChild(
             user
@@ -543,13 +522,11 @@ function renderPendingRequests() {
             buttons
         );
 
-
         pendingList.appendChild(
             card
         );
 
     });
-
 
     updatePendingCount();
 
@@ -569,19 +546,15 @@ function addPendingRequest(
         return;
     }
 
-
-    // Do not add duplicate
     const exists =
         pendingRequests.some(
             request =>
                 request.from === uid
         );
 
-
     if (exists) {
         return;
     }
-
 
     pendingRequests.push({
 
@@ -593,7 +566,6 @@ function addPendingRequest(
             Date.now()
 
     });
-
 
     renderPendingRequests();
 
@@ -612,7 +584,6 @@ function removePendingRequest(uid) {
                 request.from !== uid
         );
 
-
     renderPendingRequests();
 
 }
@@ -628,14 +599,12 @@ function connectToRecentUser(uid) {
         return;
     }
 
-
     if (targetUidInput) {
 
         targetUidInput.value =
             uid;
 
     }
-
 
     sendConnectionRequestTo(uid);
 
@@ -655,10 +624,8 @@ function setStatus(
         return;
     }
 
-
     connectionStatus.textContent =
         text;
-
 
     connectionStatus.className =
         "connection-status " +
@@ -680,24 +647,19 @@ function addMessage(
         return;
     }
 
-
     const messageElement =
         document.createElement("div");
-
 
     messageElement.className =
         "message " +
         type;
 
-
     messageElement.textContent =
         message;
-
 
     chatBox.appendChild(
         messageElement
     );
-
 
     chatBox.scrollTop =
         chatBox.scrollHeight;
@@ -726,12 +688,15 @@ function connectSignalingServer() {
 
     }
 
-
     setStatus(
         "CONNECTING TO VOID...",
         "connecting"
     );
 
+    console.log(
+        "Connecting to:",
+        SIGNALING_SERVER
+    );
 
     socket =
         new WebSocket(
@@ -749,12 +714,10 @@ function connectSignalingServer() {
             "Connected to signaling server"
         );
 
-
         setStatus(
             "SIGNALING ONLINE",
             "online"
         );
-
 
         socket.send(
             JSON.stringify({
@@ -767,7 +730,6 @@ function connectSignalingServer() {
 
             })
         );
-
 
         setTimeout(
             () => {
@@ -796,7 +758,6 @@ function connectSignalingServer() {
                     event.data
                 );
 
-
             handleServerMessage(
                 message
             );
@@ -818,12 +779,15 @@ function connectSignalingServer() {
     // CLOSE
     // ====================================
 
-    socket.onclose = () => {
+    socket.onclose = (
+        event
+    ) => {
 
         console.log(
-            "Disconnected from signaling server"
+            "Disconnected from signaling server",
+            event.code,
+            event.reason
         );
-
 
         setStatus(
             "SIGNALING OFFLINE",
@@ -845,7 +809,6 @@ function connectSignalingServer() {
             "WebSocket error:",
             error
         );
-
 
         setStatus(
             "SIGNALING ERROR",
@@ -885,12 +848,10 @@ function handleServerMessage(
             message.uid
         );
 
-
         setStatus(
             "READY",
             "online"
         );
-
 
         watchRecentPresence();
 
@@ -912,7 +873,6 @@ function handleServerMessage(
             "Server error:",
             message.message
         );
-
 
         if (
             message.message ===
@@ -938,7 +898,6 @@ function handleServerMessage(
             );
 
         }
-
 
         return;
 
@@ -997,12 +956,10 @@ function handleServerMessage(
             message.timestamp
         );
 
-
         addMessage(
             `Connection request from ${message.from}`,
             "system"
         );
-
 
         return;
 
@@ -1044,7 +1001,6 @@ function handleServerMessage(
 
         }
 
-
         return;
 
     }
@@ -1082,7 +1038,6 @@ function handleSignal(
     const data =
         message.data;
 
-
     if (!from || !data) {
         return;
     }
@@ -1102,7 +1057,6 @@ function handleSignal(
             Date.now()
         );
 
-
         return;
 
     }
@@ -1121,19 +1075,15 @@ function handleSignal(
             from
         );
 
-
         connectedUID =
             from;
-
 
         isCaller =
             true;
 
-
         createOffer(
             from
         );
-
 
         return;
 
@@ -1153,18 +1103,15 @@ function handleSignal(
             from
         );
 
-
         setStatus(
             "REQUEST REJECTED",
             "error"
         );
 
-
         addMessage(
             `${from} rejected the connection request.`,
             "system"
         );
-
 
         return;
 
@@ -1238,12 +1185,10 @@ function sendConnectionRequest() {
         return;
     }
 
-
     const uid =
         targetUidInput.value
             .trim()
             .toUpperCase();
-
 
     sendConnectionRequestTo(
         uid
@@ -1271,7 +1216,6 @@ function sendConnectionRequestTo(
 
     }
 
-
     if (uid === myUID) {
 
         setStatus(
@@ -1282,7 +1226,6 @@ function sendConnectionRequestTo(
         return;
 
     }
-
 
     if (
         !socket ||
@@ -1297,7 +1240,6 @@ function sendConnectionRequestTo(
         return;
 
     }
-
 
     socket.send(
         JSON.stringify({
@@ -1318,12 +1260,10 @@ function sendConnectionRequestTo(
         })
     );
 
-
     setStatus(
         "SENDING REQUEST...",
         "connecting"
     );
-
 
     console.log(
         `Connection request sent to ${uid}`
@@ -1354,19 +1294,15 @@ function acceptRequest(
 
     }
 
-
     removePendingRequest(
         uid
     );
 
-
     connectedUID =
         uid;
 
-
     isCaller =
         false;
-
 
     socket.send(
         JSON.stringify({
@@ -1387,22 +1323,15 @@ function acceptRequest(
         })
     );
 
-
     setStatus(
         "REQUEST ACCEPTED",
         "connecting"
     );
 
-
     addMessage(
         `Accepted connection from ${uid}.`,
         "system"
     );
-
-
-    // The requester will create
-    // the WebRTC offer.
-    // We wait for the offer.
 
 }
 
@@ -1424,11 +1353,9 @@ function rejectRequest(
 
     }
 
-
     removePendingRequest(
         uid
     );
-
 
     socket.send(
         JSON.stringify({
@@ -1449,12 +1376,10 @@ function rejectRequest(
         })
     );
 
-
     setStatus(
         "REQUEST REJECTED",
         "error"
     );
-
 
     addMessage(
         `Rejected request from ${uid}.`,
@@ -1475,6 +1400,7 @@ function createPeerConnection(
     connectedUID =
         remoteUID;
 
+    pendingIceCandidates = [];
 
     peerConnection =
         new RTCPeerConnection(
@@ -1524,7 +1450,6 @@ function createPeerConnection(
                 peerConnection.connectionState
             );
 
-
             if (
                 peerConnection.connectionState ===
                 "connected"
@@ -1535,19 +1460,16 @@ function createPeerConnection(
                     "online"
                 );
 
-
                 addMessage(
                     `Secure P2P connection established with ${connectedUID}.`,
                     "system"
                 );
-
 
                 addRecentUser(
                     connectedUID
                 );
 
             }
-
 
             if (
                 peerConnection.connectionState ===
@@ -1580,7 +1502,6 @@ function createPeerConnection(
             dataChannel =
                 event.channel;
 
-
             setupDataChannel();
 
         };
@@ -1601,12 +1522,10 @@ function createDataChannel() {
         return;
     }
 
-
     dataChannel =
         peerConnection.createDataChannel(
             "void-chat"
         );
-
 
     setupDataChannel();
 
@@ -1623,7 +1542,6 @@ function setupDataChannel() {
         return;
     }
 
-
     dataChannel.onopen =
         () => {
 
@@ -1631,12 +1549,10 @@ function setupDataChannel() {
                 "DataChannel OPEN"
             );
 
-
             setStatus(
                 "P2P CONNECTED",
                 "online"
             );
-
 
             if (connectedUID) {
 
@@ -1666,7 +1582,6 @@ function setupDataChannel() {
             console.log(
                 "DataChannel closed"
             );
-
 
             setStatus(
                 "CHAT DISCONNECTED",
@@ -1703,10 +1618,13 @@ function sendSignal(
         socket.readyState !== WebSocket.OPEN
     ) {
 
+        console.error(
+            "Cannot send signal: WebSocket offline"
+        );
+
         return;
 
     }
-
 
     socket.send(
         JSON.stringify({
@@ -1744,18 +1662,14 @@ async function createOffer(
 
         }
 
-
         createDataChannel();
-
 
         const offer =
             await peerConnection.createOffer();
 
-
         await peerConnection.setLocalDescription(
             offer
         );
-
 
         sendSignal(
             remoteUID,
@@ -1770,7 +1684,6 @@ async function createOffer(
             }
         );
 
-
         setStatus(
             "CONNECTING P2P...",
             "connecting"
@@ -1783,7 +1696,6 @@ async function createOffer(
             "Offer error:",
             error
         );
-
 
         setStatus(
             "OFFER FAILED",
@@ -1814,7 +1726,6 @@ async function receiveOffer(
 
         }
 
-
         await peerConnection.setRemoteDescription(
             new RTCSessionDescription(
                 offer
@@ -1822,14 +1733,42 @@ async function receiveOffer(
         );
 
 
+        // Add ICE candidates that
+        // arrived before the offer.
+        for (
+            const candidate of
+            pendingIceCandidates
+        ) {
+
+            try {
+
+                await peerConnection.addIceCandidate(
+                    new RTCIceCandidate(
+                        candidate
+                    )
+                );
+
+            }
+            catch (error) {
+
+                console.error(
+                    "Queued ICE error:",
+                    error
+                );
+
+            }
+
+        }
+
+        pendingIceCandidates = [];
+
+
         const answer =
             await peerConnection.createAnswer();
-
 
         await peerConnection.setLocalDescription(
             answer
         );
-
 
         sendSignal(
             remoteUID,
@@ -1844,7 +1783,6 @@ async function receiveOffer(
             }
         );
 
-
         setStatus(
             "CONNECTING P2P...",
             "connecting"
@@ -1857,7 +1795,6 @@ async function receiveOffer(
             "Receive offer error:",
             error
         );
-
 
         setStatus(
             "OFFER ERROR",
@@ -1883,12 +1820,41 @@ async function receiveAnswer(
             return;
         }
 
-
         await peerConnection.setRemoteDescription(
             new RTCSessionDescription(
                 answer
             )
         );
+
+
+        // Add ICE candidates that
+        // arrived before the answer.
+        for (
+            const candidate of
+            pendingIceCandidates
+        ) {
+
+            try {
+
+                await peerConnection.addIceCandidate(
+                    new RTCIceCandidate(
+                        candidate
+                    )
+                );
+
+            }
+            catch (error) {
+
+                console.error(
+                    "Queued ICE error:",
+                    error
+                );
+
+            }
+
+        }
+
+        pendingIceCandidates = [];
 
 
         console.log(
@@ -1918,15 +1884,22 @@ async function receiveIceCandidate(
 
     try {
 
+        if (!candidate) {
+            return;
+        }
+
         if (
             !peerConnection ||
-            !candidate
+            !peerConnection.remoteDescription
         ) {
+
+            pendingIceCandidates.push(
+                candidate
+            );
 
             return;
 
         }
-
 
         await peerConnection.addIceCandidate(
             new RTCIceCandidate(
@@ -1957,15 +1930,12 @@ function sendMessage() {
         return;
     }
 
-
     const message =
         messageInput.value.trim();
-
 
     if (!message) {
         return;
     }
-
 
     if (
         !dataChannel ||
@@ -1978,23 +1948,44 @@ function sendMessage() {
             "error"
         );
 
+        console.log(
+            "Cannot send message. DataChannel state:",
+            dataChannel
+                ? dataChannel.readyState
+                : "NO CHANNEL"
+        );
+
         return;
 
     }
 
+    try {
 
-    dataChannel.send(
-        message
-    );
+        dataChannel.send(
+            message
+        );
 
+        addMessage(
+            message,
+            "sent"
+        );
 
-    addMessage(
-        message,
-        "sent"
-    );
+        messageInput.value = "";
 
+    }
+    catch (error) {
 
-    messageInput.value = "";
+        console.error(
+            "Message send error:",
+            error
+        );
+
+        setStatus(
+            "MESSAGE FAILED",
+            "error"
+        );
+
+    }
 
 }
 
