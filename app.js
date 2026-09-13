@@ -1,4 +1,3 @@
-
 // ========================================
 // VOID SIGNALING + WEBRTC CLIENT
 // ========================================
@@ -446,6 +445,7 @@ function renderPendingRequests() {
         card.className =
             "pending-request-card";
 
+
         const user =
             document.createElement("div");
 
@@ -455,11 +455,13 @@ function renderPendingRequests() {
         user.textContent =
             request.from;
 
+
         const buttons =
             document.createElement("div");
 
         buttons.className =
             "pending-request-buttons";
+
 
         const acceptButton =
             document.createElement("button");
@@ -473,6 +475,7 @@ function renderPendingRequests() {
         acceptButton.className =
             "pending-accept";
 
+
         const rejectButton =
             document.createElement("button");
 
@@ -485,6 +488,7 @@ function renderPendingRequests() {
         rejectButton.className =
             "pending-reject";
 
+
         acceptButton.addEventListener(
             "click",
             () => {
@@ -495,6 +499,7 @@ function renderPendingRequests() {
 
             }
         );
+
 
         rejectButton.addEventListener(
             "click",
@@ -507,6 +512,7 @@ function renderPendingRequests() {
             }
         );
 
+
         buttons.appendChild(
             acceptButton
         );
@@ -515,6 +521,7 @@ function renderPendingRequests() {
             rejectButton
         );
 
+
         card.appendChild(
             user
         );
@@ -522,6 +529,7 @@ function renderPendingRequests() {
         card.appendChild(
             buttons
         );
+
 
         pendingList.appendChild(
             card
@@ -645,25 +653,93 @@ function addMessage(
 ) {
 
     if (!chatBox) {
+
+        console.error(
+            "CHAT BOX NOT FOUND"
+        );
+
         return;
+
     }
+
+
+    // Remove empty placeholder if it exists
+
+    const emptyMessage =
+        chatBox.querySelector(
+            ".empty"
+        );
+
+    if (emptyMessage) {
+
+        emptyMessage.remove();
+
+    }
+
+
+    // Outer message container
 
     const messageElement =
         document.createElement("div");
 
-    messageElement.className =
-        "message " +
-        type;
 
-    messageElement.textContent =
+    // Sent messages use "mine"
+    // Received/system messages keep
+    // their original type.
+
+    if (type === "sent") {
+
+        messageElement.className =
+            "message mine";
+
+    }
+    else {
+
+        messageElement.className =
+            "message " +
+            type;
+
+    }
+
+
+    // Message text container
+
+    const textElement =
+        document.createElement("span");
+
+    textElement.className =
+        "message-text";
+
+
+    textElement.textContent =
         message;
+
+
+    // Put text inside message
+
+    messageElement.appendChild(
+        textElement
+    );
+
+
+    // Put message inside chat
 
     chatBox.appendChild(
         messageElement
     );
 
+
+    // Scroll to newest message
+
     chatBox.scrollTop =
         chatBox.scrollHeight;
+
+
+    console.log(
+        "MESSAGE ADDED TO CHAT:",
+        message,
+        type
+    );
 
 }
 
@@ -689,15 +765,18 @@ function connectSignalingServer() {
 
     }
 
+
     setStatus(
         "CONNECTING TO VOID...",
         "connecting"
     );
 
+
     console.log(
         "Connecting to:",
         SIGNALING_SERVER
     );
+
 
     socket =
         new WebSocket(
@@ -715,10 +794,12 @@ function connectSignalingServer() {
             "Connected to signaling server"
         );
 
+
         setStatus(
             "SIGNALING ONLINE",
             "online"
         );
+
 
         socket.send(
             JSON.stringify({
@@ -731,6 +812,7 @@ function connectSignalingServer() {
 
             })
         );
+
 
         setTimeout(
             () => {
@@ -758,6 +840,7 @@ function connectSignalingServer() {
                 JSON.parse(
                     event.data
                 );
+
 
             handleServerMessage(
                 message
@@ -790,6 +873,7 @@ function connectSignalingServer() {
             event.reason
         );
 
+
         setStatus(
             "SIGNALING OFFLINE",
             "offline"
@@ -810,6 +894,7 @@ function connectSignalingServer() {
             "WebSocket error:",
             error
         );
+
 
         setStatus(
             "SIGNALING ERROR",
@@ -849,10 +934,12 @@ function handleServerMessage(
             message.uid
         );
 
+
         setStatus(
             "READY",
             "online"
         );
+
 
         watchRecentPresence();
 
@@ -875,6 +962,7 @@ function handleServerMessage(
             message.message
         );
 
+
         if (
             message.message ===
             "USER_NOT_ONLINE"
@@ -884,6 +972,7 @@ function handleServerMessage(
                 "USER OFFLINE",
                 "offline"
             );
+
 
             addMessage(
                 "That user is currently offline.",
@@ -956,6 +1045,7 @@ function handleServerMessage(
             message.from,
             message.timestamp
         );
+
 
         addMessage(
             `Connection request from ${message.from}`,
@@ -1039,6 +1129,7 @@ function handleSignal(
     const data =
         message.data;
 
+
     if (!from || !data) {
         return;
     }
@@ -1076,11 +1167,14 @@ function handleSignal(
             from
         );
 
+
         connectedUID =
             from;
 
+
         isCaller =
             true;
+
 
         createOffer(
             from
@@ -1104,10 +1198,12 @@ function handleSignal(
             from
         );
 
+
         setStatus(
             "REQUEST REJECTED",
             "error"
         );
+
 
         addMessage(
             `${from} rejected the connection request.`,
@@ -1186,10 +1282,12 @@ function sendConnectionRequest() {
         return;
     }
 
+
     const uid =
         targetUidInput.value
             .trim()
             .toUpperCase();
+
 
     sendConnectionRequestTo(
         uid
@@ -1217,6 +1315,7 @@ function sendConnectionRequestTo(
 
     }
 
+
     if (uid === myUID) {
 
         setStatus(
@@ -1227,6 +1326,7 @@ function sendConnectionRequestTo(
         return;
 
     }
+
 
     if (
         !socket ||
@@ -1241,6 +1341,7 @@ function sendConnectionRequestTo(
         return;
 
     }
+
 
     socket.send(
         JSON.stringify({
@@ -1261,10 +1362,12 @@ function sendConnectionRequestTo(
         })
     );
 
+
     setStatus(
         "SENDING REQUEST...",
         "connecting"
     );
+
 
     console.log(
         `Connection request sent to ${uid}`
@@ -1295,15 +1398,19 @@ function acceptRequest(
 
     }
 
+
     removePendingRequest(
         uid
     );
 
+
     connectedUID =
         uid;
 
+
     isCaller =
         false;
+
 
     socket.send(
         JSON.stringify({
@@ -1324,10 +1431,12 @@ function acceptRequest(
         })
     );
 
+
     setStatus(
         "REQUEST ACCEPTED",
         "connecting"
     );
+
 
     addMessage(
         `Accepted connection from ${uid}.`,
@@ -1354,9 +1463,11 @@ function rejectRequest(
 
     }
 
+
     removePendingRequest(
         uid
     );
+
 
     socket.send(
         JSON.stringify({
@@ -1377,10 +1488,12 @@ function rejectRequest(
         })
     );
 
+
     setStatus(
         "REQUEST REJECTED",
         "error"
     );
+
 
     addMessage(
         `Rejected request from ${uid}.`,
@@ -1401,7 +1514,9 @@ function createPeerConnection(
     connectedUID =
         remoteUID;
 
+
     pendingIceCandidates = [];
+
 
     peerConnection =
         new RTCPeerConnection(
@@ -1446,10 +1561,16 @@ function createPeerConnection(
     peerConnection.onconnectionstatechange =
         () => {
 
+            if (!peerConnection) {
+                return;
+            }
+
+
             console.log(
                 "WebRTC state:",
                 peerConnection.connectionState
             );
+
 
             if (
                 peerConnection.connectionState ===
@@ -1461,16 +1582,19 @@ function createPeerConnection(
                     "online"
                 );
 
+
                 addMessage(
                     `Secure P2P connection established with ${connectedUID}.`,
                     "system"
                 );
+
 
                 addRecentUser(
                     connectedUID
                 );
 
             }
+
 
             if (
                 peerConnection.connectionState ===
@@ -1500,8 +1624,14 @@ function createPeerConnection(
     peerConnection.ondatachannel =
         (event) => {
 
+            console.log(
+                "REMOTE DATA CHANNEL RECEIVED"
+            );
+
+
             dataChannel =
                 event.channel;
+
 
             setupDataChannel();
 
@@ -1523,10 +1653,29 @@ function createDataChannel() {
         return;
     }
 
+
+    // Prevent duplicate channels
+
+    if (
+        dataChannel &&
+        dataChannel.readyState !== "closed"
+    ) {
+
+        return;
+
+    }
+
+
     dataChannel =
         peerConnection.createDataChannel(
             "void-chat"
         );
+
+
+    console.log(
+        "LOCAL DATA CHANNEL CREATED"
+    );
+
 
     setupDataChannel();
 
@@ -1543,6 +1692,7 @@ function setupDataChannel() {
         return;
     }
 
+
     dataChannel.onopen =
         () => {
 
@@ -1550,10 +1700,12 @@ function setupDataChannel() {
                 "DataChannel OPEN"
             );
 
+
             setStatus(
                 "P2P CONNECTED",
                 "online"
             );
+
 
             if (connectedUID) {
 
@@ -1574,6 +1726,7 @@ function setupDataChannel() {
                 event.data
             );
 
+
             addMessage(
                 event.data,
                 "received"
@@ -1586,8 +1739,9 @@ function setupDataChannel() {
         () => {
 
             console.log(
-                "DataChannel closed"
+                "DataChannel CLOSED"
             );
+
 
             setStatus(
                 "CHAT DISCONNECTED",
@@ -1601,7 +1755,7 @@ function setupDataChannel() {
         (error) => {
 
             console.error(
-                "DataChannel error:",
+                "DataChannel ERROR:",
                 error
             );
 
@@ -1631,6 +1785,7 @@ function sendSignal(
         return;
 
     }
+
 
     socket.send(
         JSON.stringify({
@@ -1668,14 +1823,18 @@ async function createOffer(
 
         }
 
+
         createDataChannel();
+
 
         const offer =
             await peerConnection.createOffer();
 
+
         await peerConnection.setLocalDescription(
             offer
         );
+
 
         sendSignal(
             remoteUID,
@@ -1690,6 +1849,7 @@ async function createOffer(
             }
         );
 
+
         setStatus(
             "CONNECTING P2P...",
             "connecting"
@@ -1702,6 +1862,7 @@ async function createOffer(
             "Offer error:",
             error
         );
+
 
         setStatus(
             "OFFER FAILED",
@@ -1732,6 +1893,7 @@ async function receiveOffer(
 
         }
 
+
         await peerConnection.setRemoteDescription(
             new RTCSessionDescription(
                 offer
@@ -1739,8 +1901,9 @@ async function receiveOffer(
         );
 
 
-        // Add ICE candidates that
-        // arrived before the offer.
+        // Add ICE candidates that arrived
+        // before the offer.
+
         for (
             const candidate of
             pendingIceCandidates
@@ -1766,15 +1929,18 @@ async function receiveOffer(
 
         }
 
+
         pendingIceCandidates = [];
 
 
         const answer =
             await peerConnection.createAnswer();
 
+
         await peerConnection.setLocalDescription(
             answer
         );
+
 
         sendSignal(
             remoteUID,
@@ -1789,6 +1955,7 @@ async function receiveOffer(
             }
         );
 
+
         setStatus(
             "CONNECTING P2P...",
             "connecting"
@@ -1801,6 +1968,7 @@ async function receiveOffer(
             "Receive offer error:",
             error
         );
+
 
         setStatus(
             "OFFER ERROR",
@@ -1826,6 +1994,7 @@ async function receiveAnswer(
             return;
         }
 
+
         await peerConnection.setRemoteDescription(
             new RTCSessionDescription(
                 answer
@@ -1833,8 +2002,9 @@ async function receiveAnswer(
         );
 
 
-        // Add ICE candidates that
-        // arrived before the answer.
+        // Add ICE candidates that arrived
+        // before the answer.
+
         for (
             const candidate of
             pendingIceCandidates
@@ -1859,6 +2029,7 @@ async function receiveAnswer(
             }
 
         }
+
 
         pendingIceCandidates = [];
 
@@ -1894,6 +2065,7 @@ async function receiveIceCandidate(
             return;
         }
 
+
         if (
             !peerConnection ||
             !peerConnection.remoteDescription
@@ -1906,6 +2078,7 @@ async function receiveIceCandidate(
             return;
 
         }
+
 
         await peerConnection.addIceCandidate(
             new RTCIceCandidate(
@@ -1932,10 +2105,17 @@ async function receiveIceCandidate(
 
 function sendMessage() {
 
-    console.log("=================================");
-    console.log("SEND BUTTON CLICKED");
+    console.log(
+        "================================="
+    );
+
+    console.log(
+        "SEND BUTTON CLICKED"
+    );
+
 
     // Check input
+
     if (!messageInput) {
 
         console.error(
@@ -1946,20 +2126,22 @@ function sendMessage() {
 
     }
 
-    // Get message
+
     const message =
         messageInput.value.trim();
+
 
     console.log(
         "MESSAGE:",
         message
     );
 
-    // Check data channel
+
     console.log(
         "DATA CHANNEL:",
         dataChannel
     );
+
 
     if (!dataChannel) {
 
@@ -1967,21 +2149,24 @@ function sendMessage() {
             "ERROR: DataChannel does not exist!"
         );
 
+
         setStatus(
             "NO P2P CONNECTION",
             "error"
         );
 
+
         return;
 
     }
+
 
     console.log(
         "DATA CHANNEL STATE:",
         dataChannel.readyState
     );
 
-    // Empty message
+
     if (!message) {
 
         console.log(
@@ -1992,7 +2177,7 @@ function sendMessage() {
 
     }
 
-    // DataChannel must be open
+
     if (
         dataChannel.readyState !==
         "open"
@@ -2003,35 +2188,41 @@ function sendMessage() {
             dataChannel.readyState
         );
 
+
         setStatus(
             "NO P2P CONNECTION",
             "error"
         );
 
+
         return;
 
     }
 
-    // Try to send
+
     try {
 
         dataChannel.send(
             message
         );
 
+
         console.log(
             "MESSAGE SENT SUCCESSFULLY:",
             message
         );
 
-        // Show message on sender
+
+        // Display on sender
+
         addMessage(
             message,
             "sent"
         );
 
-        // Clear input
+
         messageInput.value = "";
+
 
         console.log(
             "Sender message displayed."
@@ -2045,12 +2236,14 @@ function sendMessage() {
             error
         );
 
+
         setStatus(
             "MESSAGE FAILED",
             "error"
         );
 
     }
+
 
     console.log(
         "================================="
