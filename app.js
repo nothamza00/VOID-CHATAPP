@@ -1,3 +1,4 @@
+```javascript
 // ========================================
 // VOID SIGNALING + WEBRTC CLIENT
 // ========================================
@@ -1568,6 +1569,11 @@ function setupDataChannel() {
     dataChannel.onmessage =
         (event) => {
 
+            console.log(
+                "MESSAGE RECEIVED:",
+                event.data
+            );
+
             addMessage(
                 event.data,
                 "received"
@@ -1926,57 +1932,116 @@ async function receiveIceCandidate(
 
 function sendMessage() {
 
+    console.log("=================================");
+    console.log("SEND BUTTON CLICKED");
+
+    // Check input
     if (!messageInput) {
+
+        console.error(
+            "ERROR: messageInput not found!"
+        );
+
         return;
+
     }
 
+    // Get message
     const message =
         messageInput.value.trim();
 
-    if (!message) {
-        return;
-    }
+    console.log(
+        "MESSAGE:",
+        message
+    );
 
-    if (
-        !dataChannel ||
-        dataChannel.readyState !==
-            "open"
-    ) {
+    // Check data channel
+    console.log(
+        "DATA CHANNEL:",
+        dataChannel
+    );
+
+    if (!dataChannel) {
+
+        console.error(
+            "ERROR: DataChannel does not exist!"
+        );
 
         setStatus(
             "NO P2P CONNECTION",
             "error"
         );
 
+        return;
+
+    }
+
+    console.log(
+        "DATA CHANNEL STATE:",
+        dataChannel.readyState
+    );
+
+    // Empty message
+    if (!message) {
+
         console.log(
-            "Cannot send message. DataChannel state:",
-            dataChannel
-                ? dataChannel.readyState
-                : "NO CHANNEL"
+            "Message is empty."
         );
 
         return;
 
     }
 
+    // DataChannel must be open
+    if (
+        dataChannel.readyState !==
+        "open"
+    ) {
+
+        console.error(
+            "Cannot send message. DataChannel state:",
+            dataChannel.readyState
+        );
+
+        setStatus(
+            "NO P2P CONNECTION",
+            "error"
+        );
+
+        return;
+
+    }
+
+    // Try to send
     try {
 
         dataChannel.send(
             message
         );
 
+        console.log(
+            "MESSAGE SENT SUCCESSFULLY:",
+            message
+        );
+
+        // Show message on sender
         addMessage(
             message,
             "sent"
         );
 
+        // Clear input
         messageInput.value = "";
+
+        console.log(
+            "Sender message displayed."
+        );
 
     }
     catch (error) {
 
         console.error(
-            "Message send error:",
+            "MESSAGE SEND ERROR:",
             error
         );
 
@@ -1986,6 +2051,10 @@ function sendMessage() {
         );
 
     }
+
+    console.log(
+        "================================="
+    );
 
 }
 
@@ -2054,3 +2123,4 @@ renderRecents();
 renderPendingRequests();
 
 connectSignalingServer();
+```
