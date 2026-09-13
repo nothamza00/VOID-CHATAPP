@@ -1,25 +1,22 @@
-// ========================================
-// VOID SIGNALING + WEBRTC CLIENT
-// ========================================
+// ==========================================
+// VOID CHAT - APP.JS
+// ==========================================
 
-
-// ========================================
+// ==========================================
 // CONFIGURATION
-// ========================================
+// ==========================================
 
 const SIGNALING_SERVER =
     "wss://approach-power-expensive-comprehensive.trycloudflare.com";
 
 
-// ========================================
-// USER UID
-// ========================================
+// ==========================================
+// UID
+// ==========================================
 
-let myUID =
-    localStorage.getItem("void_uid");
+let myUID = localStorage.getItem("void_uid");
 
 if (!myUID) {
-
     myUID =
         "VOID-" +
         Math.random()
@@ -27,128 +24,48 @@ if (!myUID) {
             .substring(2, 8)
             .toUpperCase();
 
-    localStorage.setItem(
-        "void_uid",
-        myUID
-    );
+    localStorage.setItem("void_uid", myUID);
 }
 
 
-// ========================================
-// WEBSOCKET
-// ========================================
+// ==========================================
+// GLOBAL VARIABLES
+// ==========================================
 
 let socket = null;
 
-
-// ========================================
-// WEBRTC
-// ========================================
-
 let peerConnection = null;
-
 let dataChannel = null;
 
 let connectedUID = null;
-
 let isCaller = false;
-
-
-// ========================================
-// ICE QUEUE
-// ========================================
 
 let pendingIceCandidates = [];
 
+let recentUsers =
+    JSON.parse(localStorage.getItem("void_recent_users")) || [];
 
-// ========================================
-// WEBRTC CONFIG
-// ========================================
-
-const rtcConfig = {
-
-    iceServers: [
-
-        {
-            urls: "stun:stun.l.google.com:19302"
-        }
-
-    ]
-
-};
+let pendingRequests = [];
 
 
-// ========================================
-// RECENTS
-// ========================================
-
-const RECENTS_KEY =
-    "void_recent_users";
-
-let recentUsers = [];
-
-try {
-
-    const saved =
-        localStorage.getItem(
-            RECENTS_KEY
-        );
-
-    if (saved) {
-
-        const parsed =
-            JSON.parse(saved);
-
-        if (Array.isArray(parsed)) {
-
-            recentUsers =
-                parsed
-                    .filter(
-                        uid =>
-                            typeof uid === "string" &&
-                            uid &&
-                            uid !== myUID
-                    )
-                    .slice(0, 20);
-
-        }
-
-    }
-
-}
-catch (error) {
-
-    recentUsers = [];
-
-}
-
-
-// ========================================
-// PRESENCE
-// ========================================
-
-const presenceStatus =
-    new Map();
-
-
-// ========================================
+// ==========================================
 // DOM ELEMENTS
-// ========================================
+// ==========================================
 
-const myUidElement =
+const myUIDElement =
     document.getElementById("myUID");
 
-const targetUidInput =
-    document.getElementById("targetUID");
+const statusElement =
+    document.getElementById("status");
+
+const statusDot =
+    document.getElementById("statusDot");
 
 const connectButton =
     document.getElementById("connectBtn");
 
-const connectionStatus =
-    document.getElementById("connectionStatus");
-
-const chatBox =
-    document.getElementById("chatBox");
+const connectUIDInput =
+    document.getElementById("connectUID");
 
 const messageInput =
     document.getElementById("messageInput");
@@ -156,63 +73,157 @@ const messageInput =
 const sendButton =
     document.getElementById("sendBtn");
 
-const pendingCount =
-    document.getElementById("pendingCount");
+const chatBox =
+    document.getElementById("messages");
+
+const recentList =
+    document.getElementById("recentList");
 
 const pendingList =
     document.getElementById("pendingList");
 
-const recentUsersElement =
-    document.getElementById("recentUsers");
-
-const recentCount =
-    document.getElementById("recentCount");
+const pendingCount =
+    document.getElementById("pendingCount");
 
 
-// ========================================
-// DISPLAY MY UID
-// ========================================
+// ==========================================
+// SHOW MY UID
+// ==========================================
 
-if (myUidElement) {
-
-    myUidElement.textContent =
-        myUID;
-
+if (myUIDElement) {
+    myUIDElement.textContent = myUID;
 }
 
 
-// ========================================
-// PENDING REQUESTS
-// ========================================
+// ==========================================
+// STATUS
+// ==========================================
 
-let pendingRequests = [];
+function setStatus(text, type = "normal") {
+
+    if (statusElement) {
+        statusElement.textContent = text;
+    }
+
+    if (statusDot) {
+        statusDot.className = "status-dot";
+
+        if (type === "online") {
+            statusDot.classList.add("online");
+        }
+
+        if (type === "error") {
+            statusDot.classList.add("error");
+        }
+    }
+
+    console.log("STATUS:", text);
+}
 
 
-// ========================================
-// SAVE RECENTS
-// ========================================
+// ==========================================
+// ADD MESSAGE
+// ==========================================
 
-function saveRecentUsers() {
+function addMessage(message, type = "system") {
 
-    localStorage.setItem(
-        RECENTS_KEY,
-        JSON.stringify(recentUsers)
+    console.log(
+        "ADDING MESSAGE TO SCREEN:",
+        message,
+        type
     );
 
+    if (!chatBox) {
+        console.error("CHAT BOX NOT FOUND!");
+
+        // Extra debugging
+        console.log(
+            "Available message elements:",
+            document.querySelectorAll(".messages")
+        );
+
+        return;
+    }
+
+    // Remove empty message
+    const emptyMessage =
+        chatBox.querySelector(".empty");
+
+    if (emptyMessage) {
+        emptyMessage.remove();
+    }
+
+
+    // Create main message container
+    const messageElement =
+        document.createElement("div");
+
+
+    // Sent message
+    if (type === "sent") {
+
+        messageElement.className =
+            "message mine";
+
+    }
+
+    // Received message
+    else if (type === "received") {
+
+        messageElement.className =
+            "message received";
+
+    }
+
+    // System message
+    else {
+
+        messageElement.className =
+            "message";
+    }
+
+
+    // Create message text
+    const textElement =
+        document.createElement("span");
+
+    textElement.className =
+        "message-text";
+
+    textElement.textContent =
+        message;
+
+
+    // Add text inside message
+    messageElement.appendChild(
+        textElement
+    );
+
+
+    // Add message to chat
+    chatBox.appendChild(
+        messageElement
+    );
+
+
+    // Scroll to newest message
+    chatBox.scrollTop =
+        chatBox.scrollHeight;
+
+
+    console.log(
+        "MESSAGE SUCCESSFULLY ADDED TO SCREEN!"
+    );
 }
 
 
-// ========================================
-// ADD USER TO RECENTS
-// ========================================
+// ==========================================
+// RECENT USERS
+// ==========================================
 
 function addRecentUser(uid) {
 
     if (!uid) {
-        return;
-    }
-
-    if (uid === myUID) {
         return;
     }
 
@@ -226,195 +237,95 @@ function addRecentUser(uid) {
     recentUsers =
         recentUsers.slice(0, 20);
 
-    saveRecentUsers();
+    localStorage.setItem(
+        "void_recent_users",
+        JSON.stringify(recentUsers)
+    );
 
     renderRecents();
-
-    watchRecentPresence();
-
 }
 
-
-// ========================================
-// GET PRESENCE LABEL
-// ========================================
-
-function getPresenceLabel(uid) {
-
-    if (
-        presenceStatus.has(uid) &&
-        presenceStatus.get(uid) === true
-    ) {
-
-        return "ONLINE";
-
-    }
-
-    return "OFFLINE";
-
-}
-
-
-// ========================================
-// RENDER RECENTS
-// ========================================
 
 function renderRecents() {
 
-    if (!recentUsersElement) {
+    if (!recentList) {
         return;
     }
 
-    if (recentCount) {
-
-        recentCount.textContent =
-            recentUsers.length;
-
-    }
-
-    recentUsersElement.innerHTML = "";
+    recentList.innerHTML = "";
 
     if (recentUsers.length === 0) {
 
-        recentUsersElement.innerHTML =
-            `<div class="recent-empty">
-                NO RECENT CHATS
-            </div>`;
+        recentList.innerHTML =
+            `<div class="empty">NO RECENT USERS</div>`;
 
         return;
-
     }
+
 
     recentUsers.forEach(uid => {
 
         const item =
-            document.createElement("button");
-
-        item.type = "button";
+            document.createElement("div");
 
         item.className =
-            "recent-item";
+            "recent-user";
 
-        const online =
-            presenceStatus.get(uid) === true;
+        item.textContent =
+            uid;
 
-        item.innerHTML = `
+        item.onclick = () => {
 
-            <span class="recent-user">
-
-                <span class="recent-dot ${
-                    online ? "online" : ""
-                }"></span>
-
-                <span class="recent-uid">
-                    ${uid}
-                </span>
-
-            </span>
-
-            <span class="recent-presence">
-                ${online ? "ONLINE" : "OFFLINE"}
-            </span>
-
-        `;
-
-        item.addEventListener(
-            "click",
-            () => {
-
-                connectToRecentUser(uid);
-
+            if (connectUIDInput) {
+                connectUIDInput.value =
+                    uid;
             }
-        );
+        };
 
-        recentUsersElement.appendChild(
-            item
-        );
-
+        recentList.appendChild(item);
     });
-
 }
 
 
-// ========================================
-// WATCH RECENT USER PRESENCE
-// ========================================
+// ==========================================
+// PENDING REQUESTS
+// ==========================================
 
-function watchRecentPresence() {
-
-    if (
-        !socket ||
-        socket.readyState !== WebSocket.OPEN
-    ) {
-
-        return;
-
-    }
-
-    const uids =
-        recentUsers.filter(
-            uid => uid !== myUID
-        );
-
-    socket.send(
-        JSON.stringify({
-
-            type:
-                "watch-presence",
-
-            uids:
-                uids
-
-        })
-    );
-
-}
-
-
-// ========================================
-// UPDATE PRESENCE
-// ========================================
-
-function updatePresence(
-    uid,
-    online
-) {
+function addPendingRequest(uid) {
 
     if (!uid) {
         return;
     }
 
-    presenceStatus.set(
-        uid,
-        online
-    );
-
-    renderRecents();
-
-}
-
-
-// ========================================
-// PENDING COUNT
-// ========================================
-
-function updatePendingCount() {
-
-    if (!pendingCount) {
-        return;
+    if (
+        !pendingRequests.includes(uid)
+    ) {
+        pendingRequests.push(uid);
     }
 
-    pendingCount.textContent =
-        pendingRequests.length;
-
+    renderPendingRequests();
 }
 
 
-// ========================================
-// RENDER PENDING REQUESTS
-// ========================================
+function removePendingRequest(uid) {
+
+    pendingRequests =
+        pendingRequests.filter(
+            user => user !== uid
+        );
+
+    renderPendingRequests();
+}
+
 
 function renderPendingRequests() {
+
+    if (pendingCount) {
+
+        pendingCount.textContent =
+            pendingRequests.length;
+    }
+
 
     if (!pendingList) {
         return;
@@ -422,378 +333,120 @@ function renderPendingRequests() {
 
     pendingList.innerHTML = "";
 
-    if (
-        pendingRequests.length === 0
-    ) {
+
+    if (pendingRequests.length === 0) {
 
         pendingList.innerHTML =
-            `<div class="panel-empty">
-                NO PENDING REQUESTS
-            </div>`;
-
-        updatePendingCount();
+            `<div class="empty">NO REQUESTS</div>`;
 
         return;
-
     }
 
-    pendingRequests.forEach(request => {
 
-        const card =
+    pendingRequests.forEach(uid => {
+
+        const item =
             document.createElement("div");
 
-        card.className =
-            "pending-request-card";
+        item.className =
+            "pending-user";
 
 
-        const user =
-            document.createElement("div");
+        const name =
+            document.createElement("span");
 
-        user.className =
-            "pending-request-user";
-
-        user.textContent =
-            request.from;
-
-
-        const buttons =
-            document.createElement("div");
-
-        buttons.className =
-            "pending-request-buttons";
+        name.textContent =
+            uid;
 
 
         const acceptButton =
             document.createElement("button");
 
-        acceptButton.type =
-            "button";
-
         acceptButton.textContent =
             "ACCEPT";
 
-        acceptButton.className =
-            "pending-accept";
+        acceptButton.onclick = () => {
+
+            acceptRequest(uid);
+        };
 
 
         const rejectButton =
             document.createElement("button");
 
-        rejectButton.type =
-            "button";
-
         rejectButton.textContent =
             "REJECT";
 
-        rejectButton.className =
-            "pending-reject";
+        rejectButton.onclick = () => {
+
+            rejectRequest(uid);
+        };
 
 
-        acceptButton.addEventListener(
-            "click",
-            () => {
+        item.appendChild(name);
 
-                acceptRequest(
-                    request.from
-                );
-
-            }
-        );
-
-
-        rejectButton.addEventListener(
-            "click",
-            () => {
-
-                rejectRequest(
-                    request.from
-                );
-
-            }
-        );
-
-
-        buttons.appendChild(
+        item.appendChild(
             acceptButton
         );
 
-        buttons.appendChild(
+        item.appendChild(
             rejectButton
         );
 
 
-        card.appendChild(
-            user
-        );
-
-        card.appendChild(
-            buttons
-        );
-
-
-        pendingList.appendChild(
-            card
-        );
-
+        pendingList.appendChild(item);
     });
-
-    updatePendingCount();
-
 }
 
 
-// ========================================
-// ADD PENDING REQUEST
-// ========================================
-
-function addPendingRequest(
-    uid,
-    timestamp
-) {
-
-    if (!uid) {
-        return;
-    }
-
-    const exists =
-        pendingRequests.some(
-            request =>
-                request.from === uid
-        );
-
-    if (exists) {
-        return;
-    }
-
-    pendingRequests.push({
-
-        from:
-            uid,
-
-        timestamp:
-            timestamp ||
-            Date.now()
-
-    });
-
-    renderPendingRequests();
-
-}
-
-
-// ========================================
-// REMOVE PENDING REQUEST
-// ========================================
-
-function removePendingRequest(uid) {
-
-    pendingRequests =
-        pendingRequests.filter(
-            request =>
-                request.from !== uid
-        );
-
-    renderPendingRequests();
-
-}
-
-
-// ========================================
-// CONNECT TO RECENT USER
-// ========================================
-
-function connectToRecentUser(uid) {
-
-    if (!uid) {
-        return;
-    }
-
-    if (targetUidInput) {
-
-        targetUidInput.value =
-            uid;
-
-    }
-
-    sendConnectionRequestTo(uid);
-
-}
-
-
-// ========================================
-// SET CONNECTION STATUS
-// ========================================
-
-function setStatus(
-    text,
-    type = ""
-) {
-
-    if (!connectionStatus) {
-        return;
-    }
-
-    connectionStatus.textContent =
-        text;
-
-    connectionStatus.className =
-        "connection-status " +
-        type;
-
-}
-
-
-// ========================================
-// ADD MESSAGE TO CHAT
-// ========================================
-
-function addMessage(
-    message,
-    type = "system"
-) {
-
-    if (!chatBox) {
-
-        console.error(
-            "CHAT BOX NOT FOUND"
-        );
-
-        return;
-
-    }
-
-
-    // Remove empty placeholder if it exists
-
-    const emptyMessage =
-        chatBox.querySelector(
-            ".empty"
-        );
-
-    if (emptyMessage) {
-
-        emptyMessage.remove();
-
-    }
-
-
-    // Outer message container
-
-    const messageElement =
-        document.createElement("div");
-
-
-    // Sent messages use "mine"
-    // Received/system messages keep
-    // their original type.
-
-    if (type === "sent") {
-
-        messageElement.className =
-            "message mine";
-
-    }
-    else {
-
-        messageElement.className =
-            "message " +
-            type;
-
-    }
-
-
-    // Message text container
-
-    const textElement =
-        document.createElement("span");
-
-    textElement.className =
-        "message-text";
-
-
-    textElement.textContent =
-        message;
-
-
-    // Put text inside message
-
-    messageElement.appendChild(
-        textElement
-    );
-
-
-    // Put message inside chat
-
-    chatBox.appendChild(
-        messageElement
-    );
-
-
-    // Scroll to newest message
-
-    chatBox.scrollTop =
-        chatBox.scrollHeight;
-
-
-    console.log(
-        "MESSAGE ADDED TO CHAT:",
-        message,
-        type
-    );
-
-}
-
-
-// ========================================
-// CONNECT WEBSOCKET
-// ========================================
+// ==========================================
+// CONNECT SIGNALING SERVER
+// ==========================================
 
 function connectSignalingServer() {
 
-    if (
-        socket &&
-        (
-            socket.readyState ===
-                WebSocket.OPEN
-            ||
-            socket.readyState ===
-                WebSocket.CONNECTING
-        )
-    ) {
+    console.log(
+        "Connecting to signaling server..."
+    );
+
+    setStatus(
+        "SIGNALING CONNECTING...",
+        "normal"
+    );
+
+
+    try {
+
+        socket =
+            new WebSocket(
+                SIGNALING_SERVER
+            );
+
+    } catch (error) {
+
+        console.error(
+            "WEBSOCKET ERROR:",
+            error
+        );
+
+        setStatus(
+            "SIGNALING ERROR",
+            "error"
+        );
 
         return;
-
     }
 
 
-    setStatus(
-        "CONNECTING TO VOID...",
-        "connecting"
-    );
-
-
-    console.log(
-        "Connecting to:",
-        SIGNALING_SERVER
-    );
-
-
-    socket =
-        new WebSocket(
-            SIGNALING_SERVER
-        );
-
-
-    // ====================================
-    // OPEN
-    // ====================================
+    // ======================================
+    // SOCKET OPEN
+    // ======================================
 
     socket.onopen = () => {
 
         console.log(
-            "Connected to signaling server"
+            "SIGNALING SERVER CONNECTED"
         );
-
 
         setStatus(
             "SIGNALING ONLINE",
@@ -801,721 +454,527 @@ function connectSignalingServer() {
         );
 
 
+        // Register this user
         socket.send(
             JSON.stringify({
-
-                type:
-                    "register",
-
-                uid:
-                    myUID
-
+                type: "register",
+                uid: myUID
             })
         );
-
-
-        setTimeout(
-            () => {
-
-                watchRecentPresence();
-
-            },
-            100
-        );
-
     };
 
 
-    // ====================================
-    // MESSAGE
-    // ====================================
+    // ======================================
+    // SOCKET MESSAGE
+    // ======================================
 
-    socket.onmessage = (
-        event
-    ) => {
+    socket.onmessage = async event => {
 
         try {
 
-            const message =
-                JSON.parse(
-                    event.data
+            const data =
+                JSON.parse(event.data);
+
+            console.log(
+                "SIGNAL RECEIVED:",
+                data
+            );
+
+
+            // ==============================
+            // REGISTERED
+            // ==============================
+
+            if (data.type === "registered") {
+
+                console.log(
+                    "REGISTERED AS:",
+                    myUID
+                );
+
+                return;
+            }
+
+
+            // ==============================
+            // PRESENCE
+            // ==============================
+
+            if (
+                data.type ===
+                "presence"
+            ) {
+
+                console.log(
+                    "PRESENCE:",
+                    data
+                );
+
+                return;
+            }
+
+
+            // ==============================
+            // REQUEST RECEIVED
+            // ==============================
+
+            if (
+                data.type ===
+                "connection-request"
+            ) {
+
+                console.log(
+                    "CONNECTION REQUEST FROM:",
+                    data.from
+                );
+
+                addPendingRequest(
+                    data.from
+                );
+
+                addMessage(
+                    "Connection request from " +
+                    data.from,
+                    "system"
+                );
+
+                return;
+            }
+
+
+            // ==============================
+            // REQUEST ACCEPTED
+            // ==============================
+
+            if (
+                data.type ===
+                "request-accepted"
+            ) {
+
+                console.log(
+                    "REQUEST ACCEPTED BY:",
+                    data.from
+                );
+
+                connectedUID =
+                    data.from;
+
+                isCaller = true;
+
+                addRecentUser(
+                    connectedUID
+                );
+
+                createPeerConnection();
+
+                createDataChannel();
+
+                createOffer();
+
+                return;
+            }
+
+
+            // ==============================
+            // REQUEST REJECTED
+            // ==============================
+
+            if (
+                data.type ===
+                "request-rejected"
+            ) {
+
+                console.log(
+                    "REQUEST REJECTED BY:",
+                    data.from
+                );
+
+                setStatus(
+                    "REQUEST REJECTED",
+                    "error"
+                );
+
+                return;
+            }
+
+
+            // ==============================
+            // OFFER
+            // ==============================
+
+            if (
+                data.type ===
+                "offer"
+            ) {
+
+                console.log(
+                    "OFFER RECEIVED FROM:",
+                    data.from
+                );
+
+                connectedUID =
+                    data.from;
+
+                isCaller = false;
+
+                createPeerConnection();
+
+                await peerConnection.setRemoteDescription(
+                    new RTCSessionDescription(
+                        data.offer
+                    )
                 );
 
 
-            handleServerMessage(
-                message
-            );
+                // Add queued ICE candidates
+                await addPendingIceCandidates();
 
+
+                const answer =
+                    await peerConnection.createAnswer();
+
+
+                await peerConnection.setLocalDescription(
+                    answer
+                );
+
+
+                socket.send(
+                    JSON.stringify({
+                        type: "answer",
+                        to: connectedUID,
+                        from: myUID,
+                        answer: peerConnection.localDescription
+                    })
+                );
+
+                return;
+            }
+
+
+            // ==============================
+            // ANSWER
+            // ==============================
+
+            if (
+                data.type ===
+                "answer"
+            ) {
+
+                console.log(
+                    "ANSWER RECEIVED FROM:",
+                    data.from
+                );
+
+                if (!peerConnection) {
+                    return;
+                }
+
+
+                await peerConnection.setRemoteDescription(
+                    new RTCSessionDescription(
+                        data.answer
+                    )
+                );
+
+
+                await addPendingIceCandidates();
+
+                return;
+            }
+
+
+            // ==============================
+            // ICE CANDIDATE
+            // ==============================
+
+            if (
+                data.type ===
+                "ice-candidate"
+            ) {
+
+                console.log(
+                    "ICE CANDIDATE RECEIVED"
+                );
+
+
+                if (
+                    peerConnection &&
+                    peerConnection.remoteDescription
+                ) {
+
+                    try {
+
+                        await peerConnection.addIceCandidate(
+                            new RTCIceCandidate(
+                                data.candidate
+                            )
+                        );
+
+                    } catch (error) {
+
+                        console.error(
+                            "ICE ERROR:",
+                            error
+                        );
+                    }
+
+                } else {
+
+                    pendingIceCandidates.push(
+                        data.candidate
+                    );
+
+                }
+
+                return;
+            }
         }
+
         catch (error) {
 
             console.error(
-                "Invalid server message",
+                "SIGNAL MESSAGE ERROR:",
                 error
             );
-
         }
-
     };
 
 
-    // ====================================
-    // CLOSE
-    // ====================================
+    // ======================================
+    // SOCKET CLOSE
+    // ======================================
 
-    socket.onclose = (
-        event
-    ) => {
+    socket.onclose = () => {
 
         console.log(
-            "Disconnected from signaling server",
-            event.code,
-            event.reason
+            "SIGNALING SERVER DISCONNECTED"
         );
-
 
         setStatus(
             "SIGNALING OFFLINE",
-            "offline"
+            "error"
         );
-
     };
 
 
-    // ====================================
-    // ERROR
-    // ====================================
+    // ======================================
+    // SOCKET ERROR
+    // ======================================
 
-    socket.onerror = (
-        error
-    ) => {
+    socket.onerror = error => {
 
         console.error(
-            "WebSocket error:",
+            "WEBSOCKET ERROR:",
             error
         );
-
 
         setStatus(
             "SIGNALING ERROR",
             "error"
         );
-
     };
-
 }
 
 
-// ========================================
-// HANDLE SERVER MESSAGE
-// ========================================
-
-function handleServerMessage(
-    message
-) {
-
-    console.log(
-        "SERVER:",
-        message
-    );
-
-
-    // ====================================
-    // REGISTERED
-    // ====================================
-
-    if (
-        message.type ===
-        "registered"
-    ) {
-
-        console.log(
-            "Registered as:",
-            message.uid
-        );
-
-
-        setStatus(
-            "READY",
-            "online"
-        );
-
-
-        watchRecentPresence();
-
-        return;
-
-    }
-
-
-    // ====================================
-    // ERROR
-    // ====================================
-
-    if (
-        message.type ===
-        "error"
-    ) {
-
-        console.log(
-            "Server error:",
-            message.message
-        );
-
-
-        if (
-            message.message ===
-            "USER_NOT_ONLINE"
-        ) {
-
-            setStatus(
-                "USER OFFLINE",
-                "offline"
-            );
-
-
-            addMessage(
-                "That user is currently offline.",
-                "system"
-            );
-
-        }
-        else {
-
-            setStatus(
-                message.message,
-                "error"
-            );
-
-        }
-
-        return;
-
-    }
-
-
-    // ====================================
-    // PRESENCE
-    // ====================================
-
-    if (
-        message.type ===
-        "presence"
-    ) {
-
-        updatePresence(
-            message.uid,
-            message.online
-        );
-
-        return;
-
-    }
-
-
-    // ====================================
-    // PRESENCE STATUS
-    // ====================================
-
-    if (
-        message.type ===
-        "presence-status"
-    ) {
-
-        updatePresence(
-            message.uid,
-            message.online
-        );
-
-        return;
-
-    }
-
-
-    // ====================================
-    // PENDING REQUEST
-    // ====================================
-
-    if (
-        message.type ===
-        "pending-request"
-    ) {
-
-        addPendingRequest(
-            message.from,
-            message.timestamp
-        );
-
-
-        addMessage(
-            `Connection request from ${message.from}`,
-            "system"
-        );
-
-        return;
-
-    }
-
-
-    // ====================================
-    // REQUEST STATUS
-    // ====================================
-
-    if (
-        message.type ===
-        "request-status"
-    ) {
-
-        if (
-            message.status ===
-            "pending"
-        ) {
-
-            if (
-                message.online === false
-            ) {
-
-                setStatus(
-                    "REQUEST SAVED — USER OFFLINE",
-                    "offline"
-                );
-
-            }
-            else {
-
-                setStatus(
-                    "REQUEST SENT",
-                    "connecting"
-                );
-
-            }
-
-        }
-
-        return;
-
-    }
-
-
-    // ====================================
-    // SIGNAL
-    // ====================================
-
-    if (
-        message.type ===
-        "signal"
-    ) {
-
-        handleSignal(
-            message
-        );
-
-    }
-
-}
-
-
-// ========================================
-// HANDLE SIGNAL
-// ========================================
-
-function handleSignal(
-    message
-) {
-
-    const from =
-        message.from;
-
-    const data =
-        message.data;
-
-
-    if (!from || !data) {
-        return;
-    }
-
-
-    // ====================================
-    // CONNECTION REQUEST
-    // ====================================
-
-    if (
-        data.action ===
-        "connection-request"
-    ) {
-
-        addPendingRequest(
-            from,
-            Date.now()
-        );
-
-        return;
-
-    }
-
-
-    // ====================================
-    // CONNECTION ACCEPTED
-    // ====================================
-
-    if (
-        data.action ===
-        "connection-accepted"
-    ) {
-
-        removePendingRequest(
-            from
-        );
-
-
-        connectedUID =
-            from;
-
-
-        isCaller =
-            true;
-
-
-        createOffer(
-            from
-        );
-
-        return;
-
-    }
-
-
-    // ====================================
-    // CONNECTION REJECTED
-    // ====================================
-
-    if (
-        data.action ===
-        "connection-rejected"
-    ) {
-
-        removePendingRequest(
-            from
-        );
-
-
-        setStatus(
-            "REQUEST REJECTED",
-            "error"
-        );
-
-
-        addMessage(
-            `${from} rejected the connection request.`,
-            "system"
-        );
-
-        return;
-
-    }
-
-
-    // ====================================
-    // WEBRTC OFFER
-    // ====================================
-
-    if (
-        data.type ===
-        "offer"
-    ) {
-
-        receiveOffer(
-            from,
-            data.offer
-        );
-
-        return;
-
-    }
-
-
-    // ====================================
-    // WEBRTC ANSWER
-    // ====================================
-
-    if (
-        data.type ===
-        "answer"
-    ) {
-
-        receiveAnswer(
-            data.answer
-        );
-
-        return;
-
-    }
-
-
-    // ====================================
-    // ICE CANDIDATE
-    // ====================================
-
-    if (
-        data.type ===
-        "ice-candidate"
-    ) {
-
-        receiveIceCandidate(
-            data.candidate
-        );
-
-        return;
-
-    }
-
-}
-
-
-// ========================================
+// ==========================================
 // SEND CONNECTION REQUEST
-// ========================================
+// ==========================================
 
 function sendConnectionRequest() {
 
-    if (!targetUidInput) {
+    if (!socket) {
+
+        setStatus(
+            "SIGNALING NOT CONNECTED",
+            "error"
+        );
+
         return;
     }
 
 
-    const uid =
-        targetUidInput.value
+    if (
+        socket.readyState !==
+        WebSocket.OPEN
+    ) {
+
+        setStatus(
+            "SIGNALING NOT CONNECTED",
+            "error"
+        );
+
+        return;
+    }
+
+
+    if (!connectUIDInput) {
+        return;
+    }
+
+
+    const targetUID =
+        connectUIDInput.value
             .trim()
             .toUpperCase();
 
 
-    sendConnectionRequestTo(
-        uid
+    if (!targetUID) {
+
+        setStatus(
+            "ENTER USER UID",
+            "error"
+        );
+
+        return;
+    }
+
+
+    if (targetUID === myUID) {
+
+        setStatus(
+            "CANNOT CONNECT TO YOURSELF",
+            "error"
+        );
+
+        return;
+    }
+
+
+    console.log(
+        "SENDING REQUEST TO:",
+        targetUID
     );
-
-}
-
-
-// ========================================
-// SEND REQUEST TO UID
-// ========================================
-
-function sendConnectionRequestTo(
-    uid
-) {
-
-    if (!uid) {
-
-        setStatus(
-            "ENTER A UID",
-            "error"
-        );
-
-        return;
-
-    }
-
-
-    if (uid === myUID) {
-
-        setStatus(
-            "YOU CANNOT CONNECT TO YOURSELF",
-            "error"
-        );
-
-        return;
-
-    }
-
-
-    if (
-        !socket ||
-        socket.readyState !== WebSocket.OPEN
-    ) {
-
-        setStatus(
-            "SIGNALING SERVER OFFLINE",
-            "error"
-        );
-
-        return;
-
-    }
 
 
     socket.send(
         JSON.stringify({
-
-            type:
-                "signal",
-
-            to:
-                uid,
-
-            data: {
-
-                action:
-                    "connection-request"
-
-            }
-
+            type: "connection-request",
+            to: targetUID,
+            from: myUID
         })
     );
 
 
     setStatus(
-        "SENDING REQUEST...",
-        "connecting"
+        "REQUEST SENT",
+        "online"
     );
-
-
-    console.log(
-        `Connection request sent to ${uid}`
-    );
-
 }
 
 
-// ========================================
+// ==========================================
 // ACCEPT REQUEST
-// ========================================
+// ==========================================
 
-function acceptRequest(
-    uid
-) {
+function acceptRequest(uid) {
 
-    if (
-        !socket ||
-        socket.readyState !== WebSocket.OPEN
-    ) {
-
-        setStatus(
-            "SIGNALING SERVER OFFLINE",
-            "error"
-        );
-
-        return;
-
-    }
-
-
-    removePendingRequest(
+    console.log(
+        "ACCEPTING REQUEST:",
         uid
     );
 
+
+    removePendingRequest(uid);
 
     connectedUID =
         uid;
 
+    isCaller = false;
 
-    isCaller =
-        false;
-
-
-    socket.send(
-        JSON.stringify({
-
-            type:
-                "signal",
-
-            to:
-                uid,
-
-            data: {
-
-                action:
-                    "connection-accepted"
-
-            }
-
-        })
-    );
-
-
-    setStatus(
-        "REQUEST ACCEPTED",
-        "connecting"
-    );
-
-
-    addMessage(
-        `Accepted connection from ${uid}.`,
-        "system"
-    );
-
-}
-
-
-// ========================================
-// REJECT REQUEST
-// ========================================
-
-function rejectRequest(
-    uid
-) {
 
     if (
-        !socket ||
-        socket.readyState !== WebSocket.OPEN
+        socket &&
+        socket.readyState ===
+        WebSocket.OPEN
     ) {
 
-        return;
-
+        socket.send(
+            JSON.stringify({
+                type: "request-accepted",
+                to: uid,
+                from: myUID
+            })
+        );
     }
 
 
-    removePendingRequest(
+    addRecentUser(uid);
+
+    createPeerConnection();
+
+    setStatus(
+        "WAITING FOR P2P...",
+        "normal"
+    );
+}
+
+
+// ==========================================
+// REJECT REQUEST
+// ==========================================
+
+function rejectRequest(uid) {
+
+    console.log(
+        "REJECTING REQUEST:",
         uid
     );
 
 
-    socket.send(
-        JSON.stringify({
-
-            type:
-                "signal",
-
-            to:
-                uid,
-
-            data: {
-
-                action:
-                    "connection-rejected"
-
-            }
-
-        })
-    );
+    removePendingRequest(uid);
 
 
-    setStatus(
-        "REQUEST REJECTED",
-        "error"
-    );
+    if (
+        socket &&
+        socket.readyState ===
+        WebSocket.OPEN
+    ) {
 
-
-    addMessage(
-        `Rejected request from ${uid}.`,
-        "system"
-    );
-
+        socket.send(
+            JSON.stringify({
+                type: "request-rejected",
+                to: uid,
+                from: myUID
+            })
+        );
+    }
 }
 
 
-// ========================================
+// ==========================================
 // CREATE PEER CONNECTION
-// ========================================
+// ==========================================
 
-function createPeerConnection(
-    remoteUID
-) {
+function createPeerConnection() {
 
-    connectedUID =
-        remoteUID;
+    console.log(
+        "CREATING PEER CONNECTION"
+    );
 
 
-    pendingIceCandidates = [];
+    // Close old connection
+    if (peerConnection) {
+
+        try {
+            peerConnection.close();
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+
+    const rtcConfig = {
+
+        iceServers: [
+
+            {
+                urls:
+                    "stun:stun.l.google.com:19302"
+            }
+
+        ]
+    };
 
 
     peerConnection =
@@ -1524,50 +983,56 @@ function createPeerConnection(
         );
 
 
-    // ====================================
+    // ======================================
     // ICE
-    // ====================================
+    // ======================================
 
     peerConnection.onicecandidate =
-        (event) => {
+        event => {
 
             if (
                 event.candidate &&
+                socket &&
+                socket.readyState ===
+                WebSocket.OPEN &&
                 connectedUID
             ) {
 
-                sendSignal(
-                    connectedUID,
-                    {
-
-                        type:
-                            "ice-candidate",
-
-                        candidate:
-                            event.candidate
-
-                    }
+                socket.send(
+                    JSON.stringify({
+                        type: "ice-candidate",
+                        to: connectedUID,
+                        from: myUID,
+                        candidate: event.candidate
+                    })
                 );
-
             }
-
         };
 
 
-    // ====================================
+    // ======================================
+    // ICE STATE
+    // ======================================
+
+    peerConnection.oniceconnectionstatechange =
+        () => {
+
+            console.log(
+                "ICE STATE:",
+                peerConnection.iceConnectionState
+            );
+        };
+
+
+    // ======================================
     // CONNECTION STATE
-    // ====================================
+    // ======================================
 
     peerConnection.onconnectionstatechange =
         () => {
 
-            if (!peerConnection) {
-                return;
-            }
-
-
             console.log(
-                "WebRTC state:",
+                "PEER CONNECTION STATE:",
                 peerConnection.connectionState
             );
 
@@ -1581,89 +1046,86 @@ function createPeerConnection(
                     "P2P CONNECTED",
                     "online"
                 );
-
-
-                addMessage(
-                    `Secure P2P connection established with ${connectedUID}.`,
-                    "system"
-                );
-
-
-                addRecentUser(
-                    connectedUID
-                );
-
             }
 
 
             if (
                 peerConnection.connectionState ===
-                    "disconnected"
-                ||
-                peerConnection.connectionState ===
-                    "failed"
-                ||
-                peerConnection.connectionState ===
-                    "closed"
+                "disconnected"
             ) {
 
                 setStatus(
                     "P2P DISCONNECTED",
-                    "offline"
+                    "error"
                 );
-
             }
 
+
+            if (
+                peerConnection.connectionState ===
+                "failed"
+            ) {
+
+                setStatus(
+                    "P2P CONNECTION FAILED",
+                    "error"
+                );
+            }
         };
 
 
-    // ====================================
-    // DATA CHANNEL
-    // ====================================
+    // ======================================
+    // REMOTE DATA CHANNEL
+    // ======================================
 
     peerConnection.ondatachannel =
-        (event) => {
+        event => {
 
             console.log(
                 "REMOTE DATA CHANNEL RECEIVED"
             );
 
-
             dataChannel =
                 event.channel;
 
-
             setupDataChannel();
-
         };
-
-
-    return peerConnection;
-
 }
 
 
-// ========================================
+// ==========================================
 // CREATE DATA CHANNEL
-// ========================================
+// ==========================================
 
 function createDataChannel() {
 
     if (!peerConnection) {
+
+        console.error(
+            "NO PEER CONNECTION"
+        );
+
         return;
     }
 
-
-    // Prevent duplicate channels
 
     if (
         dataChannel &&
-        dataChannel.readyState !== "closed"
+        dataChannel.readyState !==
+        "closed"
     ) {
 
-        return;
+        console.log(
+            "DATA CHANNEL ALREADY EXISTS"
+        );
 
+        return;
     }
+
+
+    console.log(
+        "CREATING DATA CHANNEL"
+    );
 
 
     dataChannel =
@@ -1672,54 +1134,72 @@ function createDataChannel() {
         );
 
 
-    console.log(
-        "LOCAL DATA CHANNEL CREATED"
-    );
-
-
     setupDataChannel();
-
 }
 
 
-// ========================================
+// ==========================================
 // SETUP DATA CHANNEL
-// ========================================
+// ==========================================
 
 function setupDataChannel() {
 
     if (!dataChannel) {
+
+        console.error(
+            "NO DATA CHANNEL"
+        );
+
         return;
     }
 
 
-    dataChannel.onopen =
-        () => {
+    console.log(
+        "SETTING UP DATA CHANNEL"
+    );
 
-            console.log(
-                "DataChannel OPEN"
+
+    dataChannel.onopen = () => {
+
+        console.log(
+            "================================="
+        );
+
+        console.log(
+            "DATA CHANNEL OPEN"
+        );
+
+        console.log(
+            "CONNECTED TO:",
+            connectedUID
+        );
+
+        console.log(
+            "================================="
+        );
+
+
+        setStatus(
+            "P2P CONNECTED",
+            "online"
+        );
+
+
+        if (connectedUID) {
+
+            addRecentUser(
+                connectedUID
             );
+        }
+    };
 
 
-            setStatus(
-                "P2P CONNECTED",
-                "online"
-            );
-
-
-            if (connectedUID) {
-
-                addRecentUser(
-                    connectedUID
-                );
-
-            }
-
-        };
-
+    // ======================================
+    // MESSAGE RECEIVED
+    // ======================================
 
     dataChannel.onmessage =
-        (event) => {
+        event => {
 
             console.log(
                 "MESSAGE RECEIVED:",
@@ -1731,100 +1211,62 @@ function setupDataChannel() {
                 event.data,
                 "received"
             );
-
         };
 
 
-    dataChannel.onclose =
-        () => {
+    // ======================================
+    // CLOSE
+    // ======================================
 
-            console.log(
-                "DataChannel CLOSED"
-            );
+    dataChannel.onclose = () => {
+
+        console.log(
+            "DATA CHANNEL CLOSED"
+        );
+
+        setStatus(
+            "P2P DISCONNECTED",
+            "error"
+        );
+    };
 
 
-            setStatus(
-                "CHAT DISCONNECTED",
-                "offline"
-            );
-
-        };
-
+    // ======================================
+    // ERROR
+    // ======================================
 
     dataChannel.onerror =
-        (error) => {
+        error => {
 
             console.error(
-                "DataChannel ERROR:",
+                "DATA CHANNEL ERROR:",
                 error
             );
-
         };
-
 }
 
 
-// ========================================
-// SEND SIGNAL
-// ========================================
+// ==========================================
+// CREATE OFFER
+// ==========================================
 
-function sendSignal(
-    to,
-    data
-) {
+async function createOffer() {
 
-    if (
-        !socket ||
-        socket.readyState !== WebSocket.OPEN
-    ) {
+    if (!peerConnection) {
 
         console.error(
-            "Cannot send signal: WebSocket offline"
+            "NO PEER CONNECTION FOR OFFER"
         );
 
         return;
-
     }
 
 
-    socket.send(
-        JSON.stringify({
-
-            type:
-                "signal",
-
-            to:
-                to,
-
-            data:
-                data
-
-        })
-    );
-
-}
-
-
-// ========================================
-// CREATE OFFER
-// ========================================
-
-async function createOffer(
-    remoteUID
-) {
-
     try {
 
-        if (!peerConnection) {
-
-            createPeerConnection(
-                remoteUID
-            );
-
-        }
-
-
-        createDataChannel();
+        console.log(
+            "CREATING OFFER..."
+        );
 
 
         const offer =
@@ -1836,272 +1278,82 @@ async function createOffer(
         );
 
 
-        sendSignal(
-            remoteUID,
-            {
-
-                type:
-                    "offer",
-
-                offer:
-                    offer
-
-            }
+        socket.send(
+            JSON.stringify({
+                type: "offer",
+                to: connectedUID,
+                from: myUID,
+                offer: peerConnection.localDescription
+            })
         );
-
-
-        setStatus(
-            "CONNECTING P2P...",
-            "connecting"
-        );
-
-    }
-    catch (error) {
-
-        console.error(
-            "Offer error:",
-            error
-        );
-
-
-        setStatus(
-            "OFFER FAILED",
-            "error"
-        );
-
-    }
-
-}
-
-
-// ========================================
-// RECEIVE OFFER
-// ========================================
-
-async function receiveOffer(
-    remoteUID,
-    offer
-) {
-
-    try {
-
-        if (!peerConnection) {
-
-            createPeerConnection(
-                remoteUID
-            );
-
-        }
-
-
-        await peerConnection.setRemoteDescription(
-            new RTCSessionDescription(
-                offer
-            )
-        );
-
-
-        // Add ICE candidates that arrived
-        // before the offer.
-
-        for (
-            const candidate of
-            pendingIceCandidates
-        ) {
-
-            try {
-
-                await peerConnection.addIceCandidate(
-                    new RTCIceCandidate(
-                        candidate
-                    )
-                );
-
-            }
-            catch (error) {
-
-                console.error(
-                    "Queued ICE error:",
-                    error
-                );
-
-            }
-
-        }
-
-
-        pendingIceCandidates = [];
-
-
-        const answer =
-            await peerConnection.createAnswer();
-
-
-        await peerConnection.setLocalDescription(
-            answer
-        );
-
-
-        sendSignal(
-            remoteUID,
-            {
-
-                type:
-                    "answer",
-
-                answer:
-                    answer
-
-            }
-        );
-
-
-        setStatus(
-            "CONNECTING P2P...",
-            "connecting"
-        );
-
-    }
-    catch (error) {
-
-        console.error(
-            "Receive offer error:",
-            error
-        );
-
-
-        setStatus(
-            "OFFER ERROR",
-            "error"
-        );
-
-    }
-
-}
-
-
-// ========================================
-// RECEIVE ANSWER
-// ========================================
-
-async function receiveAnswer(
-    answer
-) {
-
-    try {
-
-        if (!peerConnection) {
-            return;
-        }
-
-
-        await peerConnection.setRemoteDescription(
-            new RTCSessionDescription(
-                answer
-            )
-        );
-
-
-        // Add ICE candidates that arrived
-        // before the answer.
-
-        for (
-            const candidate of
-            pendingIceCandidates
-        ) {
-
-            try {
-
-                await peerConnection.addIceCandidate(
-                    new RTCIceCandidate(
-                        candidate
-                    )
-                );
-
-            }
-            catch (error) {
-
-                console.error(
-                    "Queued ICE error:",
-                    error
-                );
-
-            }
-
-        }
-
-
-        pendingIceCandidates = [];
 
 
         console.log(
-            "Remote answer received"
+            "OFFER SENT"
         );
 
     }
+
     catch (error) {
 
         console.error(
-            "Answer error:",
+            "OFFER ERROR:",
             error
         );
-
     }
-
 }
 
 
-// ========================================
-// RECEIVE ICE
-// ========================================
+// ==========================================
+// ADD PENDING ICE
+// ==========================================
 
-async function receiveIceCandidate(
-    candidate
-) {
+async function addPendingIceCandidates() {
 
-    try {
-
-        if (!candidate) {
-            return;
-        }
+    if (!peerConnection) {
+        return;
+    }
 
 
-        if (
-            !peerConnection ||
-            !peerConnection.remoteDescription
-        ) {
+    if (
+        !peerConnection.remoteDescription
+    ) {
+        return;
+    }
 
-            pendingIceCandidates.push(
-                candidate
+
+    while (
+        pendingIceCandidates.length > 0
+    ) {
+
+        const candidate =
+            pendingIceCandidates.shift();
+
+
+        try {
+
+            await peerConnection.addIceCandidate(
+                new RTCIceCandidate(
+                    candidate
+                )
             );
 
-            return;
-
         }
 
+        catch (error) {
 
-        await peerConnection.addIceCandidate(
-            new RTCIceCandidate(
-                candidate
-            )
-        );
-
+            console.error(
+                "PENDING ICE ERROR:",
+                error
+            );
+        }
     }
-    catch (error) {
-
-        console.error(
-            "ICE candidate error:",
-            error
-        );
-
-    }
-
 }
 
 
-// ========================================
-// SEND CHAT MESSAGE
-// ========================================
+// ==========================================
+// SEND MESSAGE
+// ==========================================
 
 function sendMessage() {
 
@@ -2114,16 +1366,13 @@ function sendMessage() {
     );
 
 
-    // Check input
-
     if (!messageInput) {
 
         console.error(
-            "ERROR: messageInput not found!"
+            "MESSAGE INPUT NOT FOUND!"
         );
 
         return;
-
     }
 
 
@@ -2143,21 +1392,28 @@ function sendMessage() {
     );
 
 
+    if (!message) {
+
+        console.log(
+            "MESSAGE EMPTY"
+        );
+
+        return;
+    }
+
+
     if (!dataChannel) {
 
         console.error(
-            "ERROR: DataChannel does not exist!"
+            "DATA CHANNEL DOES NOT EXIST!"
         );
-
 
         setStatus(
             "NO P2P CONNECTION",
             "error"
         );
 
-
         return;
-
     }
 
 
@@ -2167,41 +1423,27 @@ function sendMessage() {
     );
 
 
-    if (!message) {
-
-        console.log(
-            "Message is empty."
-        );
-
-        return;
-
-    }
-
-
     if (
         dataChannel.readyState !==
         "open"
     ) {
 
         console.error(
-            "Cannot send message. DataChannel state:",
-            dataChannel.readyState
+            "DATA CHANNEL IS NOT OPEN"
         );
-
 
         setStatus(
             "NO P2P CONNECTION",
             "error"
         );
 
-
         return;
-
     }
 
 
     try {
 
+        // Send through WebRTC
         dataChannel.send(
             message
         );
@@ -2213,22 +1455,23 @@ function sendMessage() {
         );
 
 
-        // Display on sender
-
+        // Show on sender screen
         addMessage(
             message,
             "sent"
         );
 
 
+        // Clear input
         messageInput.value = "";
 
 
         console.log(
-            "Sender message displayed."
+            "SENDER MESSAGE DISPLAYED"
         );
 
     }
+
     catch (error) {
 
         console.error(
@@ -2236,45 +1479,28 @@ function sendMessage() {
             error
         );
 
-
         setStatus(
             "MESSAGE FAILED",
             "error"
         );
-
     }
 
 
     console.log(
         "================================="
     );
-
 }
 
 
-// ========================================
-// SEND BUTTON
-// ========================================
-
-if (sendButton) {
-
-    sendButton.addEventListener(
-        "click",
-        sendMessage
-    );
-
-}
-
-
-// ========================================
-// ENTER KEY
-// ========================================
+// ==========================================
+// ENTER TO SEND
+// ==========================================
 
 if (messageInput) {
 
     messageInput.addEventListener(
         "keydown",
-        (event) => {
+        event => {
 
             if (
                 event.key ===
@@ -2284,32 +1510,103 @@ if (messageInput) {
                 event.preventDefault();
 
                 sendMessage();
-
             }
-
         }
     );
-
 }
 
 
-// ========================================
+// ==========================================
+// SEND BUTTON
+// ==========================================
+
+if (sendButton) {
+
+    sendButton.addEventListener(
+        "click",
+        event => {
+
+            event.preventDefault();
+
+            sendMessage();
+        }
+    );
+
+
+    // Mobile touch support
+    sendButton.addEventListener(
+        "touchend",
+        event => {
+
+            event.preventDefault();
+
+            sendMessage();
+        },
+        {
+            passive: false
+        }
+    );
+}
+
+
+// ==========================================
 // CONNECT BUTTON
-// ========================================
+// ==========================================
 
 if (connectButton) {
 
     connectButton.addEventListener(
         "click",
-        sendConnectionRequest
+        event => {
+
+            event.preventDefault();
+
+            sendConnectionRequest();
+        }
     );
 
+
+    connectButton.addEventListener(
+        "touchend",
+        event => {
+
+            event.preventDefault();
+
+            sendConnectionRequest();
+        },
+        {
+            passive: false
+        }
+    );
 }
 
 
-// ========================================
+// ==========================================
 // INITIALIZE
-// ========================================
+// ==========================================
+
+console.log(
+    "================================="
+);
+
+console.log(
+    "VOID CHAT INITIALIZING"
+);
+
+console.log(
+    "MY UID:",
+    myUID
+);
+
+console.log(
+    "SIGNALING SERVER:",
+    SIGNALING_SERVER
+);
+
+console.log(
+    "================================="
+);
+
 
 renderRecents();
 
