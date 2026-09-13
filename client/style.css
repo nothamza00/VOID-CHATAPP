@@ -1,0 +1,782 @@
+*
+{
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+
+html,
+body
+{
+    width: 100%;
+    min-height: 100%;
+}
+
+
+body
+{
+    background: #050505;
+    color: #eeeeee;
+    font-family: Arial, Helvetica, sans-serif;
+
+    min-height: 100vh;
+    min-height: 100dvh;
+
+    -webkit-text-size-adjust: 100%;
+}
+
+
+.app
+{
+    width: 100%;
+    max-width: 800px;
+    margin: auto;
+
+    min-height: 100vh;
+    min-height: 100dvh;
+
+    display: flex;
+    flex-direction: column;
+}
+
+
+header
+{
+    height: 70px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 25px;
+
+    border-bottom: 1px solid #1a1a1a;
+}
+
+
+.logo
+{
+    font-size: 20px;
+    font-weight: bold;
+    letter-spacing: 6px;
+}
+
+
+.status
+{
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: #777;
+}
+
+
+.dot
+{
+    display: inline-block;
+
+    width: 6px;
+    height: 6px;
+
+    background: #777;
+
+    border-radius: 50%;
+
+    margin-right: 6px;
+}
+
+
+main
+{
+    flex: 1;
+    padding: 35px 25px;
+}
+
+
+.label
+{
+    font-size: 9px;
+    letter-spacing: 3px;
+
+    color: #555;
+
+    margin-bottom: 10px;
+}
+
+
+.identity
+{
+    margin-bottom: 35px;
+}
+
+
+.uid-box
+{
+    height: 50px;
+
+    border: 1px solid #202020;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding-left: 15px;
+}
+
+
+#myUID
+{
+    font-family: monospace;
+    font-size: 16px;
+    letter-spacing: 2px;
+}
+
+
+.uid-box button
+{
+    height: 100%;
+
+    background: transparent;
+    color: #777;
+
+    border: none;
+    border-left: 1px solid #202020;
+
+    padding: 0 15px;
+
+    cursor: pointer;
+
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-appearance: none;
+}
+
+
+.uid-box button:hover
+{
+    color: white;
+}
+
+
+.hint
+{
+    margin-top: 8px;
+
+    color: #444;
+
+    font-size: 11px;
+}
+
+
+.connect
+{
+    margin-bottom: 25px;
+}
+
+
+.connect-box
+{
+    display: flex;
+    height: 50px;
+}
+
+
+.connect-box input
+{
+    flex: 1;
+    min-width: 0;
+
+    background: #0a0a0a;
+    color: white;
+
+    border: 1px solid #202020;
+
+    outline: none;
+
+    padding: 0 15px;
+
+    font-family: monospace;
+    font-size: 16px;
+
+    border-radius: 0;
+
+    -webkit-appearance: none;
+}
+
+
+.connect-box input:focus
+{
+    border-color: #444;
+}
+
+
+.connect-box button
+{
+    flex-shrink: 0;
+
+    background: #eeeeee;
+    color: #050505;
+
+    border: none;
+
+    padding: 0 20px;
+
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 1px;
+
+    cursor: pointer;
+
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-appearance: none;
+
+    position: relative;
+    z-index: 10;
+}
+
+
+.connect-box button:hover
+{
+    background: white;
+}
+
+
+.connection-status
+{
+    margin-top: 8px;
+
+    font-size: 9px;
+    letter-spacing: 2px;
+
+    color: #444;
+}
+
+
+/* ========================================
+   PANELS
+======================================== */
+
+.void-panel
+{
+    border: 1px solid #181818;
+    margin-bottom: 25px;
+    background: #070707;
+}
+
+
+.panel-heading
+{
+    min-height: 45px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 15px;
+
+    border-bottom: 1px solid #151515;
+}
+
+
+.panel-heading .label
+{
+    margin-bottom: 0;
+}
+
+
+.panel-count
+{
+    min-width: 22px;
+    height: 22px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid #252525;
+
+    color: #777;
+
+    font-size: 9px;
+    font-family: monospace;
+}
+
+
+.pending-list,
+.recent-list
+{
+    min-height: 45px;
+}
+
+
+.panel-empty,
+.recent-empty
+{
+    padding: 15px;
+
+    color: #333;
+
+    text-align: center;
+
+    font-size: 9px;
+    letter-spacing: 2px;
+}
+
+
+.pending-request-card
+{
+    padding: 14px 15px;
+
+    border-bottom: 1px solid #151515;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    background: #0b0b0b;
+}
+
+
+.pending-request-card:last-child
+{
+    border-bottom: none;
+}
+
+
+.pending-request-card > span
+{
+    color: #00ff88;
+    font-family: monospace;
+
+    font-size: 12px;
+    font-weight: bold;
+
+    overflow-wrap: anywhere;
+}
+
+
+.pending-request-card > div
+{
+    display: flex;
+
+    gap: 7px;
+
+    flex-shrink: 0;
+}
+
+
+.pending-request-card button
+{
+    border: none;
+    border-radius: 0;
+
+    padding: 9px 11px;
+
+    font-size: 8px;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-appearance: none;
+}
+
+
+.pending-request-card button:first-child
+{
+    background: #eeeeee;
+    color: #050505;
+}
+
+
+.pending-request-card button:last-child
+{
+    background: #222;
+    color: #aaa;
+}
+
+
+.recent-item
+{
+    width: 100%;
+
+    min-height: 55px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    padding: 0 15px;
+
+    background: transparent;
+
+    border: none;
+    border-bottom: 1px solid #151515;
+
+    color: white;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-appearance: none;
+}
+
+
+.recent-item:last-child
+{
+    border-bottom: none;
+}
+
+
+.recent-item:hover
+{
+    background: #0d0d0d;
+}
+
+
+.recent-user
+{
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+}
+
+
+.recent-dot
+{
+    width: 7px;
+    height: 7px;
+
+    flex-shrink: 0;
+
+    border-radius: 50%;
+
+    background: #444;
+}
+
+
+.recent-dot.online
+{
+    background: #00ff88;
+}
+
+
+.recent-uid
+{
+    font-family: monospace;
+    font-size: 12px;
+    letter-spacing: 1px;
+
+    overflow-wrap: anywhere;
+}
+
+
+.recent-presence
+{
+    flex-shrink: 0;
+
+    font-size: 8px;
+    letter-spacing: 1px;
+
+    color: #444;
+}
+
+
+.recent-item:has(.recent-dot.online) .recent-presence
+{
+    color: #00aa66;
+}
+
+
+/* ========================================
+   CHAT
+======================================== */
+
+.chat
+{
+    border: 1px solid #181818;
+
+    height: 400px;
+
+    display: flex;
+    flex-direction: column;
+
+    min-height: 0;
+}
+
+
+.messages
+{
+    flex: 1;
+
+    min-height: 0;
+
+    overflow-y: auto;
+
+    -webkit-overflow-scrolling: touch;
+
+    padding: 20px;
+}
+
+
+.empty
+{
+    color: #333;
+
+    text-align: center;
+
+    margin-top: 150px;
+
+    font-size: 10px;
+    letter-spacing: 3px;
+}
+
+
+.message
+{
+    margin-bottom: 15px;
+
+    max-width: 75%;
+
+    overflow-wrap: anywhere;
+}
+
+
+.message.mine
+{
+    margin-left: auto;
+    text-align: right;
+}
+
+
+.message-text
+{
+    display: inline-block;
+
+    padding: 10px 13px;
+
+    border: 1px solid #252525;
+
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+
+.mine .message-text
+{
+    background: #111;
+}
+
+
+.message-time
+{
+    margin-top: 4px;
+
+    font-size: 8px;
+
+    color: #444;
+}
+
+
+.typing-area
+{
+    height: 55px;
+
+    display: flex;
+
+    border-top: 1px solid #181818;
+
+    flex-shrink: 0;
+}
+
+
+.typing-area input
+{
+    flex: 1;
+
+    min-width: 0;
+
+    background: #080808;
+
+    border: none;
+
+    outline: none;
+
+    color: white;
+
+    padding: 0 15px;
+
+    font-size: 16px;
+
+    border-radius: 0;
+
+    -webkit-appearance: none;
+}
+
+
+.typing-area button
+{
+    width: 55px;
+
+    flex-shrink: 0;
+
+    background: #eeeeee;
+
+    border: none;
+
+    color: #050505;
+
+    font-size: 20px;
+
+    cursor: pointer;
+
+    touch-action: manipulation;
+
+    -webkit-tap-highlight-color: transparent;
+    -webkit-appearance: none;
+
+    position: relative;
+    z-index: 20;
+
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+
+.typing-area button:hover
+{
+    background: white;
+}
+
+
+.typing-area button:active
+{
+    background: #cccccc;
+}
+
+
+/* ========================================
+   FOOTER
+======================================== */
+
+footer
+{
+    height: 45px;
+
+    border-top: 1px solid #151515;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 25px;
+
+    color: #333;
+
+    font-size: 8px;
+
+    letter-spacing: 2px;
+}
+
+
+/* ========================================
+   MOBILE
+======================================== */
+
+@media (max-width: 600px)
+{
+
+    main
+    {
+        padding: 25px 15px;
+    }
+
+
+    header
+    {
+        padding: 0 15px;
+    }
+
+
+    .chat
+    {
+        height: 450px;
+    }
+
+
+    footer
+    {
+        gap: 12px;
+    }
+
+
+    .connect-box button
+    {
+        padding: 0 15px;
+    }
+
+
+    .typing-area button
+    {
+        width: 58px;
+    }
+
+
+    .pending-request-card
+    {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+
+    .pending-request-card > div
+    {
+        width: 100%;
+    }
+
+
+    .pending-request-card button
+    {
+        flex: 1;
+    }
+
+}
+
+
+@media (max-width: 380px)
+{
+
+    main
+    {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+
+    .connect-box button
+    {
+        padding: 0 12px;
+
+        font-size: 9px;
+    }
+
+
+    .typing-area button
+    {
+        width: 55px;
+    }
+
+}

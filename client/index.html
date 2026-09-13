@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    >
+
+    <title>VOID</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+
+<body>
+
+    <div class="app">
+
+        <header>
+
+            <div class="logo">
+                VOID
+            </div>
+
+            <div class="status">
+                <span class="dot"></span>
+                READY
+            </div>
+
+        </header>
+
+
+        <main>
+
+            <section class="identity">
+
+                <p class="label">
+                    YOUR ID
+                </p>
+
+                <div class="uid-box">
+
+                    <span id="myUID">
+                        Generating...
+                    </span>
+
+                    <button
+                        id="copyBtn"
+                        type="button"
+                    >
+                        COPY
+                    </button>
+
+                </div>
+
+                <p class="hint">
+                    Share this ID with someone to receive messages.
+                </p>
+
+            </section>
+
+
+            <section class="connect">
+
+                <p class="label">
+                    CONNECT TO USER
+                </p>
+
+                <div class="connect-box">
+
+                    <input
+                        type="text"
+                        id="targetUID"
+                        placeholder="Enter UID..."
+                        autocomplete="off"
+                        autocapitalize="characters"
+                        spellcheck="false"
+                    >
+
+                    <button
+                        id="connectBtn"
+                        type="button"
+                    >
+                        CONNECT
+                    </button>
+
+                </div>
+
+                <div
+                    id="connectionStatus"
+                    class="connection-status"
+                >
+                    NOT CONNECTED
+                </div>
+
+            </section>
+
+
+            <!-- =====================================
+                 PENDING REQUESTS
+            ====================================== -->
+
+            <section class="void-panel pending-panel">
+
+                <div class="panel-heading">
+
+                    <p class="label">
+                        PENDING REQUESTS
+                    </p>
+
+                    <span
+                        id="pendingCount"
+                        class="panel-count"
+                    >
+                        0
+                    </span>
+
+                </div>
+
+                <div
+                    id="pendingList"
+                    class="pending-list"
+                >
+
+                    <div class="panel-empty">
+                        NO PENDING REQUESTS
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =====================================
+                 RECENTS
+            ====================================== -->
+
+            <section class="void-panel recents-panel">
+
+                <div class="panel-heading">
+
+                    <p class="label">
+                        RECENTS
+                    </p>
+
+                    <span
+                        id="recentCount"
+                        class="panel-count"
+                    >
+                        0
+                    </span>
+
+                </div>
+
+                <div
+                    id="recentUsers"
+                    class="recent-list"
+                >
+
+                    <div class="recent-empty">
+                        NO RECENT CHATS
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <section class="chat">
+
+                <div
+                    id="messages"
+                    class="messages"
+                >
+
+                    <div class="empty">
+                        NO MESSAGES
+                    </div>
+
+                </div>
+
+
+                <div class="typing-area">
+
+                    <input
+                        type="text"
+                        id="messageInput"
+                        placeholder="Type a message..."
+                        autocomplete="off"
+                        enterkeyhint="send"
+                    >
+
+                    <button
+                        id="sendBtn"
+                        type="button"
+                        aria-label="Send message"
+                    >
+                        ↑
+                    </button>
+
+                </div>
+
+            </section>
+
+
+        </main>
+
+
+        <footer>
+
+            <span>
+                NO ACCOUNT
+            </span>
+
+            <span>
+                NO HISTORY
+            </span>
+
+            <span>
+                NO PROFILE
+            </span>
+
+        </footer>
+
+
+    </div>
+
+
+    <script src="app.js"></script>
+
+</body>
+
+</html>
