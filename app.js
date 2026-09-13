@@ -1,4 +1,4 @@
-```javascript
+
 // ========================================
 // VOID SIGNALING + WEBRTC CLIENT
 // ========================================
@@ -2123,4 +2123,4 @@ renderRecents();
 renderPendingRequests();
 
 connectSignalingServer();
-```
+
