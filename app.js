@@ -106,7 +106,9 @@ function setStatus(text, type = "normal") {
     }
 
     if (statusDot) {
-        statusDot.className = "status-dot";
+
+        statusDot.className =
+            "status-dot";
 
         if (type === "online") {
             statusDot.classList.add("online");
@@ -117,7 +119,10 @@ function setStatus(text, type = "normal") {
         }
     }
 
-    console.log("STATUS:", text);
+    console.log(
+        "STATUS:",
+        text
+    );
 }
 
 
@@ -133,28 +138,37 @@ function addMessage(message, type = "system") {
         type
     );
 
-    if (!chatBox) {
-        console.error("CHAT BOX NOT FOUND!");
 
-        // Extra debugging
-        console.log(
-            "Available message elements:",
-            document.querySelectorAll(".messages")
+    // Find chat box again
+    // This makes sure we always use
+    // the actual #messages element.
+    const box =
+        document.getElementById("messages");
+
+
+    if (!box) {
+
+        console.error(
+            "CHAT BOX NOT FOUND: #messages"
         );
 
         return;
     }
 
-    // Remove empty message
+
+    // Remove empty placeholder
     const emptyMessage =
-        chatBox.querySelector(".empty");
+        box.querySelector(".empty");
 
     if (emptyMessage) {
         emptyMessage.remove();
     }
 
 
-    // Create main message container
+    // ======================================
+    // MAIN MESSAGE
+    // ======================================
+
     const messageElement =
         document.createElement("div");
 
@@ -164,16 +178,16 @@ function addMessage(message, type = "system") {
 
         messageElement.className =
             "message mine";
-
     }
+
 
     // Received message
     else if (type === "received") {
 
         messageElement.className =
-            "message received";
-
+            "message";
     }
+
 
     // System message
     else {
@@ -183,7 +197,10 @@ function addMessage(message, type = "system") {
     }
 
 
-    // Create message text
+    // ======================================
+    // MESSAGE TEXT
+    // ======================================
+
     const textElement =
         document.createElement("span");
 
@@ -191,28 +208,38 @@ function addMessage(message, type = "system") {
         "message-text";
 
     textElement.textContent =
-        message;
+        String(message);
 
 
-    // Add text inside message
+    // Put text inside message
     messageElement.appendChild(
         textElement
     );
 
 
-    // Add message to chat
-    chatBox.appendChild(
+    // Put message inside chat
+    box.appendChild(
         messageElement
     );
 
 
     // Scroll to newest message
-    chatBox.scrollTop =
-        chatBox.scrollHeight;
+    requestAnimationFrame(() => {
+
+        box.scrollTop =
+            box.scrollHeight;
+
+    });
 
 
     console.log(
         "MESSAGE SUCCESSFULLY ADDED TO SCREEN!"
+    );
+
+
+    console.log(
+        "CHAT HTML:",
+        box.innerHTML
     );
 }
 
@@ -227,20 +254,25 @@ function addRecentUser(uid) {
         return;
     }
 
+
     recentUsers =
         recentUsers.filter(
             user => user !== uid
         );
 
+
     recentUsers.unshift(uid);
+
 
     recentUsers =
         recentUsers.slice(0, 20);
+
 
     localStorage.setItem(
         "void_recent_users",
         JSON.stringify(recentUsers)
     );
+
 
     renderRecents();
 }
@@ -252,7 +284,9 @@ function renderRecents() {
         return;
     }
 
+
     recentList.innerHTML = "";
+
 
     if (recentUsers.length === 0) {
 
@@ -274,15 +308,20 @@ function renderRecents() {
         item.textContent =
             uid;
 
+
         item.onclick = () => {
 
             if (connectUIDInput) {
+
                 connectUIDInput.value =
                     uid;
             }
         };
 
-        recentList.appendChild(item);
+
+        recentList.appendChild(
+            item
+        );
     });
 }
 
@@ -297,11 +336,14 @@ function addPendingRequest(uid) {
         return;
     }
 
+
     if (
         !pendingRequests.includes(uid)
     ) {
+
         pendingRequests.push(uid);
     }
+
 
     renderPendingRequests();
 }
@@ -313,6 +355,7 @@ function removePendingRequest(uid) {
         pendingRequests.filter(
             user => user !== uid
         );
+
 
     renderPendingRequests();
 }
@@ -330,6 +373,7 @@ function renderPendingRequests() {
     if (!pendingList) {
         return;
     }
+
 
     pendingList.innerHTML = "";
 
@@ -365,6 +409,7 @@ function renderPendingRequests() {
         acceptButton.textContent =
             "ACCEPT";
 
+
         acceptButton.onclick = () => {
 
             acceptRequest(uid);
@@ -377,13 +422,16 @@ function renderPendingRequests() {
         rejectButton.textContent =
             "REJECT";
 
+
         rejectButton.onclick = () => {
 
             rejectRequest(uid);
         };
 
 
-        item.appendChild(name);
+        item.appendChild(
+            name
+        );
 
         item.appendChild(
             acceptButton
@@ -394,7 +442,9 @@ function renderPendingRequests() {
         );
 
 
-        pendingList.appendChild(item);
+        pendingList.appendChild(
+            item
+        );
     });
 }
 
@@ -409,6 +459,7 @@ function connectSignalingServer() {
         "Connecting to signaling server..."
     );
 
+
     setStatus(
         "SIGNALING CONNECTING...",
         "normal"
@@ -422,17 +473,21 @@ function connectSignalingServer() {
                 SIGNALING_SERVER
             );
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
         console.error(
             "WEBSOCKET ERROR:",
             error
         );
 
+
         setStatus(
             "SIGNALING ERROR",
             "error"
         );
+
 
         return;
     }
@@ -448,13 +503,13 @@ function connectSignalingServer() {
             "SIGNALING SERVER CONNECTED"
         );
 
+
         setStatus(
             "SIGNALING ONLINE",
             "online"
         );
 
 
-        // Register this user
         socket.send(
             JSON.stringify({
                 type: "register",
@@ -468,12 +523,14 @@ function connectSignalingServer() {
     // SOCKET MESSAGE
     // ======================================
 
-    socket.onmessage = async event => {
+    socket.onmessage =
+        async event => {
 
         try {
 
             const data =
                 JSON.parse(event.data);
+
 
             console.log(
                 "SIGNAL RECEIVED:",
@@ -485,7 +542,10 @@ function connectSignalingServer() {
             // REGISTERED
             // ==============================
 
-            if (data.type === "registered") {
+            if (
+                data.type ===
+                "registered"
+            ) {
 
                 console.log(
                     "REGISTERED AS:",
@@ -515,7 +575,7 @@ function connectSignalingServer() {
 
 
             // ==============================
-            // REQUEST RECEIVED
+            // CONNECTION REQUEST
             // ==============================
 
             if (
@@ -528,15 +588,18 @@ function connectSignalingServer() {
                     data.from
                 );
 
+
                 addPendingRequest(
                     data.from
                 );
+
 
                 addMessage(
                     "Connection request from " +
                     data.from,
                     "system"
                 );
+
 
                 return;
             }
@@ -556,20 +619,28 @@ function connectSignalingServer() {
                     data.from
                 );
 
+
                 connectedUID =
                     data.from;
 
-                isCaller = true;
+
+                isCaller =
+                    true;
+
 
                 addRecentUser(
                     connectedUID
                 );
 
+
                 createPeerConnection();
+
 
                 createDataChannel();
 
+
                 createOffer();
+
 
                 return;
             }
@@ -589,10 +660,12 @@ function connectSignalingServer() {
                     data.from
                 );
 
+
                 setStatus(
                     "REQUEST REJECTED",
                     "error"
                 );
+
 
                 return;
             }
@@ -612,12 +685,17 @@ function connectSignalingServer() {
                     data.from
                 );
 
+
                 connectedUID =
                     data.from;
 
-                isCaller = false;
+
+                isCaller =
+                    false;
+
 
                 createPeerConnection();
+
 
                 await peerConnection.setRemoteDescription(
                     new RTCSessionDescription(
@@ -626,7 +704,6 @@ function connectSignalingServer() {
                 );
 
 
-                // Add queued ICE candidates
                 await addPendingIceCandidates();
 
 
@@ -644,9 +721,11 @@ function connectSignalingServer() {
                         type: "answer",
                         to: connectedUID,
                         from: myUID,
-                        answer: peerConnection.localDescription
+                        answer:
+                            peerConnection.localDescription
                     })
                 );
+
 
                 return;
             }
@@ -666,6 +745,7 @@ function connectSignalingServer() {
                     data.from
                 );
 
+
                 if (!peerConnection) {
                     return;
                 }
@@ -679,6 +759,7 @@ function connectSignalingServer() {
 
 
                 await addPendingIceCandidates();
+
 
                 return;
             }
@@ -711,7 +792,9 @@ function connectSignalingServer() {
                             )
                         );
 
-                    } catch (error) {
+                    }
+
+                    catch (error) {
 
                         console.error(
                             "ICE ERROR:",
@@ -719,16 +802,19 @@ function connectSignalingServer() {
                         );
                     }
 
-                } else {
+                }
+
+                else {
 
                     pendingIceCandidates.push(
                         data.candidate
                     );
-
                 }
+
 
                 return;
             }
+
         }
 
         catch (error) {
@@ -751,6 +837,7 @@ function connectSignalingServer() {
             "SIGNALING SERVER DISCONNECTED"
         );
 
+
         setStatus(
             "SIGNALING OFFLINE",
             "error"
@@ -762,12 +849,14 @@ function connectSignalingServer() {
     // SOCKET ERROR
     // ======================================
 
-    socket.onerror = error => {
+    socket.onerror =
+        error => {
 
         console.error(
             "WEBSOCKET ERROR:",
             error
         );
+
 
         setStatus(
             "SIGNALING ERROR",
@@ -877,10 +966,13 @@ function acceptRequest(uid) {
 
     removePendingRequest(uid);
 
+
     connectedUID =
         uid;
 
-    isCaller = false;
+
+    isCaller =
+        false;
 
 
     if (
@@ -899,9 +991,13 @@ function acceptRequest(uid) {
     }
 
 
-    addRecentUser(uid);
+    addRecentUser(
+        uid
+    );
+
 
     createPeerConnection();
+
 
     setStatus(
         "WAITING FOR P2P...",
@@ -922,7 +1018,9 @@ function rejectRequest(uid) {
     );
 
 
-    removePendingRequest(uid);
+    removePendingRequest(
+        uid
+    );
 
 
     if (
@@ -953,13 +1051,19 @@ function createPeerConnection() {
     );
 
 
-    // Close old connection
     if (peerConnection) {
 
         try {
+
             peerConnection.close();
-        } catch (error) {
-            console.log(error);
+
+        }
+
+        catch (error) {
+
+            console.log(
+                error
+            );
         }
     }
 
@@ -990,24 +1094,25 @@ function createPeerConnection() {
     peerConnection.onicecandidate =
         event => {
 
-            if (
-                event.candidate &&
-                socket &&
-                socket.readyState ===
-                WebSocket.OPEN &&
-                connectedUID
-            ) {
+        if (
+            event.candidate &&
+            socket &&
+            socket.readyState ===
+            WebSocket.OPEN &&
+            connectedUID
+        ) {
 
-                socket.send(
-                    JSON.stringify({
-                        type: "ice-candidate",
-                        to: connectedUID,
-                        from: myUID,
-                        candidate: event.candidate
-                    })
-                );
-            }
-        };
+            socket.send(
+                JSON.stringify({
+                    type: "ice-candidate",
+                    to: connectedUID,
+                    from: myUID,
+                    candidate:
+                        event.candidate
+                })
+            );
+        }
+    };
 
 
     // ======================================
@@ -1017,11 +1122,11 @@ function createPeerConnection() {
     peerConnection.oniceconnectionstatechange =
         () => {
 
-            console.log(
-                "ICE STATE:",
-                peerConnection.iceConnectionState
-            );
-        };
+        console.log(
+            "ICE STATE:",
+            peerConnection.iceConnectionState
+        );
+    };
 
 
     // ======================================
@@ -1031,47 +1136,47 @@ function createPeerConnection() {
     peerConnection.onconnectionstatechange =
         () => {
 
-            console.log(
-                "PEER CONNECTION STATE:",
-                peerConnection.connectionState
+        console.log(
+            "PEER CONNECTION STATE:",
+            peerConnection.connectionState
+        );
+
+
+        if (
+            peerConnection.connectionState ===
+            "connected"
+        ) {
+
+            setStatus(
+                "P2P CONNECTED",
+                "online"
             );
+        }
 
 
-            if (
-                peerConnection.connectionState ===
-                "connected"
-            ) {
+        if (
+            peerConnection.connectionState ===
+            "disconnected"
+        ) {
 
-                setStatus(
-                    "P2P CONNECTED",
-                    "online"
-                );
-            }
-
-
-            if (
-                peerConnection.connectionState ===
-                "disconnected"
-            ) {
-
-                setStatus(
-                    "P2P DISCONNECTED",
-                    "error"
-                );
-            }
+            setStatus(
+                "P2P DISCONNECTED",
+                "error"
+            );
+        }
 
 
-            if (
-                peerConnection.connectionState ===
-                "failed"
-            ) {
+        if (
+            peerConnection.connectionState ===
+            "failed"
+        ) {
 
-                setStatus(
-                    "P2P CONNECTION FAILED",
-                    "error"
-                );
-            }
-        };
+            setStatus(
+                "P2P CONNECTION FAILED",
+                "error"
+            );
+        }
+    };
 
 
     // ======================================
@@ -1081,15 +1186,17 @@ function createPeerConnection() {
     peerConnection.ondatachannel =
         event => {
 
-            console.log(
-                "REMOTE DATA CHANNEL RECEIVED"
-            );
+        console.log(
+            "REMOTE DATA CHANNEL RECEIVED"
+        );
 
-            dataChannel =
-                event.channel;
 
-            setupDataChannel();
-        };
+        dataChannel =
+            event.channel;
+
+
+        setupDataChannel();
+    };
 }
 
 
@@ -1159,20 +1266,28 @@ function setupDataChannel() {
     );
 
 
-    dataChannel.onopen = () => {
+    // ======================================
+    // OPEN
+    // ======================================
+
+    dataChannel.onopen =
+        () => {
 
         console.log(
             "================================="
         );
 
+
         console.log(
             "DATA CHANNEL OPEN"
         );
+
 
         console.log(
             "CONNECTED TO:",
             connectedUID
         );
+
 
         console.log(
             "================================="
@@ -1201,28 +1316,30 @@ function setupDataChannel() {
     dataChannel.onmessage =
         event => {
 
-            console.log(
-                "MESSAGE RECEIVED:",
-                event.data
-            );
+        console.log(
+            "MESSAGE RECEIVED:",
+            event.data
+        );
 
 
-            addMessage(
-                event.data,
-                "received"
-            );
-        };
+        addMessage(
+            event.data,
+            "received"
+        );
+    };
 
 
     // ======================================
     // CLOSE
     // ======================================
 
-    dataChannel.onclose = () => {
+    dataChannel.onclose =
+        () => {
 
         console.log(
             "DATA CHANNEL CLOSED"
         );
+
 
         setStatus(
             "P2P DISCONNECTED",
@@ -1238,11 +1355,11 @@ function setupDataChannel() {
     dataChannel.onerror =
         error => {
 
-            console.error(
-                "DATA CHANNEL ERROR:",
-                error
-            );
-        };
+        console.error(
+            "DATA CHANNEL ERROR:",
+            error
+        );
+    };
 }
 
 
@@ -1283,7 +1400,8 @@ async function createOffer() {
                 type: "offer",
                 to: connectedUID,
                 from: myUID,
-                offer: peerConnection.localDescription
+                offer:
+                    peerConnection.localDescription
             })
         );
 
@@ -1361,6 +1479,7 @@ function sendMessage() {
         "================================="
     );
 
+
     console.log(
         "SEND BUTTON CLICKED"
     );
@@ -1408,10 +1527,12 @@ function sendMessage() {
             "DATA CHANNEL DOES NOT EXIST!"
         );
 
+
         setStatus(
             "NO P2P CONNECTION",
             "error"
         );
+
 
         return;
     }
@@ -1432,10 +1553,12 @@ function sendMessage() {
             "DATA CHANNEL IS NOT OPEN"
         );
 
+
         setStatus(
             "NO P2P CONNECTION",
             "error"
         );
+
 
         return;
     }
@@ -1443,7 +1566,7 @@ function sendMessage() {
 
     try {
 
-        // Send through WebRTC
+        // Send message through WebRTC
         dataChannel.send(
             message
         );
@@ -1455,7 +1578,7 @@ function sendMessage() {
         );
 
 
-        // Show on sender screen
+        // Show sender message
         addMessage(
             message,
             "sent"
@@ -1463,7 +1586,8 @@ function sendMessage() {
 
 
         // Clear input
-        messageInput.value = "";
+        messageInput.value =
+            "";
 
 
         console.log(
@@ -1478,6 +1602,7 @@ function sendMessage() {
             "MESSAGE SEND ERROR:",
             error
         );
+
 
         setStatus(
             "MESSAGE FAILED",
@@ -1502,17 +1627,17 @@ if (messageInput) {
         "keydown",
         event => {
 
-            if (
-                event.key ===
-                "Enter"
-            ) {
+        if (
+            event.key ===
+            "Enter"
+        ) {
 
-                event.preventDefault();
+            event.preventDefault();
 
-                sendMessage();
-            }
+            sendMessage();
         }
-    );
+
+    });
 }
 
 
@@ -1526,26 +1651,25 @@ if (sendButton) {
         "click",
         event => {
 
-            event.preventDefault();
+        event.preventDefault();
 
-            sendMessage();
-        }
-    );
+        sendMessage();
+
+    });
 
 
-    // Mobile touch support
     sendButton.addEventListener(
         "touchend",
         event => {
 
-            event.preventDefault();
+        event.preventDefault();
 
-            sendMessage();
-        },
-        {
-            passive: false
-        }
-    );
+        sendMessage();
+
+    },
+    {
+        passive: false
+    });
 }
 
 
@@ -1559,25 +1683,25 @@ if (connectButton) {
         "click",
         event => {
 
-            event.preventDefault();
+        event.preventDefault();
 
-            sendConnectionRequest();
-        }
-    );
+        sendConnectionRequest();
+
+    });
 
 
     connectButton.addEventListener(
         "touchend",
         event => {
 
-            event.preventDefault();
+        event.preventDefault();
 
-            sendConnectionRequest();
-        },
-        {
-            passive: false
-        }
-    );
+        sendConnectionRequest();
+
+    },
+    {
+        passive: false
+    });
 }
 
 
@@ -1589,19 +1713,23 @@ console.log(
     "================================="
 );
 
+
 console.log(
     "VOID CHAT INITIALIZING"
 );
+
 
 console.log(
     "MY UID:",
     myUID
 );
 
+
 console.log(
     "SIGNALING SERVER:",
     SIGNALING_SERVER
 );
+
 
 console.log(
     "================================="
