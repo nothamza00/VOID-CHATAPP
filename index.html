@@ -21,21 +21,34 @@
 
     <div class="app">
 
+
         <header>
 
             <div class="logo">
                 VOID
             </div>
 
-            <div class="status">
-                <span class="dot"></span>
+            <div id="status" class="status">
+
+                <span
+                    id="statusDot"
+                    class="dot"
+                ></span>
+
                 READY
+
             </div>
 
         </header>
 
 
+
         <main>
+
+
+            <!-- ==============================
+                 IDENTITY
+            =============================== -->
 
             <section class="identity">
 
@@ -65,6 +78,11 @@
             </section>
 
 
+
+            <!-- ==============================
+                 CONNECT
+            =============================== -->
+
             <section class="connect">
 
                 <p class="label">
@@ -75,7 +93,7 @@
 
                     <input
                         type="text"
-                        id="targetUID"
+                        id="connectUID"
                         placeholder="Enter UID..."
                         autocomplete="off"
                         autocapitalize="characters"
@@ -101,9 +119,10 @@
             </section>
 
 
-            <!-- =====================================
+
+            <!-- ==============================
                  PENDING REQUESTS
-            ====================================== -->
+            =============================== -->
 
             <section class="void-panel pending-panel">
 
@@ -122,6 +141,7 @@
 
                 </div>
 
+
                 <div
                     id="pendingList"
                     class="pending-list"
@@ -136,9 +156,10 @@
             </section>
 
 
-            <!-- =====================================
+
+            <!-- ==============================
                  RECENTS
-            ====================================== -->
+            =============================== -->
 
             <section class="void-panel recents-panel">
 
@@ -157,8 +178,9 @@
 
                 </div>
 
+
                 <div
-                    id="recentUsers"
+                    id="recentList"
                     class="recent-list"
                 >
 
@@ -171,7 +193,13 @@
             </section>
 
 
+
+            <!-- ==============================
+                 CHAT
+            =============================== -->
+
             <section class="chat">
+
 
                 <div
                     id="messages"
@@ -185,6 +213,7 @@
                 </div>
 
 
+
                 <div class="typing-area">
 
                     <input
@@ -194,6 +223,7 @@
                         autocomplete="off"
                         enterkeyhint="send"
                     >
+
 
                     <button
                         id="sendBtn"
@@ -205,11 +235,17 @@
 
                 </div>
 
+
             </section>
 
 
         </main>
 
+
+
+        <!-- ==============================
+             FOOTER
+        =============================== -->
 
         <footer>
 
@@ -236,3 +272,5 @@
 </body>
 
 </html>
+
+
